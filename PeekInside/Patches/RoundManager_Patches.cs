@@ -14,6 +14,6 @@ internal static class RoundManager_Patches
         if (!NetworkUtils.IsExecutingRPCMethod(__instance))
             return;
 
-        EntranceManager.LinkPortals();
+        EntranceManager.LinkMainEntrancePortals();
     }
 }

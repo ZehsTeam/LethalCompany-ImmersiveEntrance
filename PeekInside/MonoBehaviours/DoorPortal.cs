@@ -1,4 +1,6 @@
-﻿using com.github.zehsteam.PeekInside.Helpers;
+﻿using com.github.zehsteam.PeekInside.Extensions;
+using com.github.zehsteam.PeekInside.Helpers;
+using com.github.zehsteam.PeekInside.Objects;
 using GameNetcodeStuff;
 using UnityEngine;
 
@@ -11,101 +13,84 @@ public class DoorPortal : MonoBehaviour
     private MeshRenderer _screenMeshRenderer;
 
     [SerializeField]
+    private GameObject _cameraContainer;
+
+    [SerializeField]
     private Camera _camera;
 
-    [SerializeField]
-    private GameObject _renderContainer;
-
-    [SerializeField]
-    private Material _outsideDefaultInputMaterial;
-
-    [SerializeField]
-    private Material _insideDefaultInputMaterial;
-
     [Space(10f)]
-    [Header("Camera Output Templates")]
+    [Header("Portal Outside")]
     [Space(5f)]
 
     [SerializeField]
-    private RenderTexture _templateRenderTexture;
+    private RenderTexture _outsideOutputRenderTexture;
 
     [SerializeField]
-    private Material _templateMaterial;
+    private Material _outsideOutputMaterial;
+
+    [Space(10f)]
+    [Header("Portal Inside")]
+    [Space(5f)]
+
+    [SerializeField]
+    private RenderTexture _insideOutputRenderTexture;
+
+    [SerializeField]
+    private Material _insideOutputMaterial;
     #endregion
 
-    private EntranceTeleport _entranceTeleport;
-    private DoorPortal _linkedPortal;
+    public DoorPortal LinkedPortal { get; private set; }
+    public bool HasLinkedPortal => LinkedPortal != null;
+
+    private MainEntranceInfo _mainEntrance;
 
     private RenderTexture _outputRenderTexture;
     private Material _outputMaterial;
 
     private Material _inputMaterial;
 
-    public void SetEntranceTeleport(EntranceTeleport entranceTeleport)
+    public void SetMainEntranceInfo(MainEntranceInfo mainEntrance)
     {
-        _entranceTeleport = entranceTeleport;
+        _mainEntrance = mainEntrance;
     }
 
-    private void LinkPortal(DoorPortal other)
+    public void LinkPortal(DoorPortal other)
     {
-        if (_linkedPortal != null)
+        if (HasLinkedPortal)
             return;
 
         if (this == other)
             return;
 
-        _linkedPortal = other;
+        if (other.HasLinkedPortal && other.LinkedPortal != this)
+            return;
+
+        LinkedPortal = other;
         _inputMaterial = other._outputMaterial;
         _screenMeshRenderer.material = _inputMaterial;
 
-        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked entranceId: {_entranceTeleport.entranceId} -> {other._entranceTeleport.entranceId}, isEntranceToBuilding: {_entranceTeleport.isEntranceToBuilding} -> {other._entranceTeleport.isEntranceToBuilding}", extended: true);
-    }
-
-    public static void LinkPortals(DoorPortal left, DoorPortal right)
-    {
-        if (left == null || right == null)
-            return;
-
-        if (left == right)
-            return;
-
-        if (left._linkedPortal != null || right._linkedPortal != null)
-            return;
-
-        left.LinkPortal(right);
-        right.LinkPortal(left);
-
-        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked two portals!", extended: true);
+        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked portal {_mainEntrance.EntranceTeleport.GetLogInfo()} -> {other._mainEntrance.EntranceTeleport.GetLogInfo()}");
     }
 
     private void Awake()
     {
-        CreateCameraOutput();
-    }
-
-    private void CreateCameraOutput()
-    {
-        int randomId = Random.Range(1000000, 9999999);
-
-        _outputRenderTexture = new RenderTexture(_templateRenderTexture)
+        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
         {
-            name = $"{MyPluginInfo.PLUGIN_NAME} {randomId}"
-        };
-
-        Logger.LogInfo($"[{nameof(DoorPortal)}] RenderTexture created: {_outputRenderTexture.width}x{_outputRenderTexture.height}, isCreated: {_outputRenderTexture.IsCreated()}", extended: true);
-
-        _outputMaterial = new Material(_templateMaterial)
+            _outputRenderTexture = _outsideOutputRenderTexture;
+            _outputMaterial = _outsideOutputMaterial;
+        }
+        else
         {
-            name = $"{MyPluginInfo.PLUGIN_NAME} {randomId}",
-            mainTexture = _outputRenderTexture
-        };
+            _outputRenderTexture = _insideOutputRenderTexture;
+            _outputMaterial = _insideOutputMaterial;
+        }
 
         _camera.targetTexture = _outputRenderTexture;
     }
 
     private void Update()
     {
-        if (_linkedPortal == null)
+        if (!HasLinkedPortal)
             return;
 
         UpdateScreen();
@@ -115,22 +100,13 @@ public class DoorPortal : MonoBehaviour
     {
         if (IsLocalPlayerCameraNearby())
         {
-            _screenMeshRenderer.material = _inputMaterial;
-
-            _linkedPortal._renderContainer.SetActive(true);
+            LinkedPortal.SetRenderingEnabled(true);
+            SetScreenEnabled(true);
         }
         else
         {
-            if (_entranceTeleport.isEntranceToBuilding)
-            {
-                _screenMeshRenderer.material = _outsideDefaultInputMaterial;
-            }
-            else
-            {
-                _screenMeshRenderer.material = _insideDefaultInputMaterial;
-            }
-            
-            _linkedPortal._renderContainer.SetActive(false);
+            SetScreenEnabled(false);
+            LinkedPortal.SetRenderingEnabled(false);
         }
     }
 
@@ -146,9 +122,24 @@ public class DoorPortal : MonoBehaviour
         return distance <= 10f;
     }
 
+    private void SetRenderingEnabled(bool value)
+    {
+        _cameraContainer?.SetActive(value);
+    }
+
+    private void SetScreenEnabled(bool value)
+    {
+        _screenMeshRenderer.gameObject.SetActive(value);
+
+        if (_mainEntrance.HasViewBlocker)
+        {
+            _mainEntrance.ViewBlockerObject.SetActive(!value);
+        }
+    }
+
     private void LateUpdate()
     {
-        if (_linkedPortal == null)
+        if (!HasLinkedPortal)
             return;
 
         UpdateCamera();
@@ -166,7 +157,7 @@ public class DoorPortal : MonoBehaviour
         if (playerCamera == null) return;
 
         // 1. Find the player's transform relative to the LINKED portal
-        Transform linkedTransform = _linkedPortal.transform;
+        Transform linkedTransform = LinkedPortal.transform;
 
         // 2. Calculate the relative offset of the player camera to the linked portal
         Matrix4x4 relativeMatrix = transform.localToWorldMatrix
@@ -189,7 +180,7 @@ public class DoorPortal : MonoBehaviour
     private void SetObliqueNearPlane(Camera playerCamera)
     {
         // Get the portal plane in camera-local space
-        Transform clipPlane = _linkedPortal.transform;
+        Transform clipPlane = LinkedPortal.transform;
 
         int dot = System.Math.Sign(Vector3.Dot(clipPlane.forward, clipPlane.position - _camera.transform.position));
 
