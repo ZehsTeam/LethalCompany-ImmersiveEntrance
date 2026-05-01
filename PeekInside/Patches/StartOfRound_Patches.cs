@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using com.github.zehsteam.PeekInside.Managers;
+using HarmonyLib;
 
 namespace com.github.zehsteam.PeekInside.Patches;
 
@@ -9,6 +10,6 @@ internal static class StartOfRound_Patches
     [HarmonyPostfix]
     private static void ShipHasLeft_Patch()
     {
-        EntranceTeleport_Patches.OnShipHasLeft();
+        EntranceManager.OnShipHasLeft();
     }
 }

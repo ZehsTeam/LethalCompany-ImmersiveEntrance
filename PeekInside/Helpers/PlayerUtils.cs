@@ -102,16 +102,4 @@ internal static class PlayerUtils
         playerScript = GetRandomPlayerScript(playerScripts, excludeLocal);
         return playerScript != null;
     }
-
-
-
-    public static bool IsLocalPlayerNearby(Vector3 position, float radius)
-    {
-        PlayerControllerB playerScript = LocalPlayerScript;
-        if (playerScript == null) return false;
-
-        Vector3 playerPosition = playerScript.transform.position;
-
-        return Vector3.Distance(playerPosition, position) <= radius;
-    }
 }

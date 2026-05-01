@@ -1,4 +1,5 @@
 ﻿using com.github.zehsteam.PeekInside.Helpers;
+using com.github.zehsteam.PeekInside.Managers;
 using HarmonyLib;
 
 namespace com.github.zehsteam.PeekInside.Patches;
@@ -13,6 +14,6 @@ internal static class RoundManager_Patches
         if (!NetworkUtils.IsExecutingRPCMethod(__instance))
             return;
 
-        EntranceTeleport_Patches.LinkPortals();
+        EntranceManager.LinkPortals();
     }
 }

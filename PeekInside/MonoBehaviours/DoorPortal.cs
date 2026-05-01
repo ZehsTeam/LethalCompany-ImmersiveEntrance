@@ -14,7 +14,13 @@ public class DoorPortal : MonoBehaviour
     private Camera _camera;
 
     [SerializeField]
-    private Material _darkMaterial;
+    private GameObject _renderContainer;
+
+    [SerializeField]
+    private Material _outsideDefaultInputMaterial;
+
+    [SerializeField]
+    private Material _insideDefaultInputMaterial;
 
     [Space(10f)]
     [Header("Camera Output Templates")]
@@ -27,12 +33,18 @@ public class DoorPortal : MonoBehaviour
     private Material _templateMaterial;
     #endregion
 
+    private EntranceTeleport _entranceTeleport;
     private DoorPortal _linkedPortal;
 
     private RenderTexture _outputRenderTexture;
     private Material _outputMaterial;
 
     private Material _inputMaterial;
+
+    public void SetEntranceTeleport(EntranceTeleport entranceTeleport)
+    {
+        _entranceTeleport = entranceTeleport;
+    }
 
     private void LinkPortal(DoorPortal other)
     {
@@ -45,6 +57,8 @@ public class DoorPortal : MonoBehaviour
         _linkedPortal = other;
         _inputMaterial = other._outputMaterial;
         _screenMeshRenderer.material = _inputMaterial;
+
+        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked entranceId: {_entranceTeleport.entranceId} -> {other._entranceTeleport.entranceId}, isEntranceToBuilding: {_entranceTeleport.isEntranceToBuilding} -> {other._entranceTeleport.isEntranceToBuilding}", extended: true);
     }
 
     public static void LinkPortals(DoorPortal left, DoorPortal right)
@@ -60,6 +74,8 @@ public class DoorPortal : MonoBehaviour
 
         left.LinkPortal(right);
         right.LinkPortal(left);
+
+        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked two portals!", extended: true);
     }
 
     private void Awake()
@@ -69,10 +85,18 @@ public class DoorPortal : MonoBehaviour
 
     private void CreateCameraOutput()
     {
-        _outputRenderTexture = new RenderTexture(_templateRenderTexture);
+        int randomId = Random.Range(1000000, 9999999);
+
+        _outputRenderTexture = new RenderTexture(_templateRenderTexture)
+        {
+            name = $"{MyPluginInfo.PLUGIN_NAME} {randomId}"
+        };
+
+        Logger.LogInfo($"[{nameof(DoorPortal)}] RenderTexture created: {_outputRenderTexture.width}x{_outputRenderTexture.height}, isCreated: {_outputRenderTexture.IsCreated()}", extended: true);
 
         _outputMaterial = new Material(_templateMaterial)
         {
+            name = $"{MyPluginInfo.PLUGIN_NAME} {randomId}",
             mainTexture = _outputRenderTexture
         };
 
@@ -89,21 +113,37 @@ public class DoorPortal : MonoBehaviour
 
     private void UpdateScreen()
     {
-        if (IsLocalPlayerNearby())
+        if (IsLocalPlayerCameraNearby())
         {
             _screenMeshRenderer.material = _inputMaterial;
-            _linkedPortal._camera.enabled = true;
+
+            _linkedPortal._renderContainer.SetActive(true);
         }
         else
         {
-            _screenMeshRenderer.material = _darkMaterial;
-            _linkedPortal._camera.enabled = false;
+            if (_entranceTeleport.isEntranceToBuilding)
+            {
+                _screenMeshRenderer.material = _outsideDefaultInputMaterial;
+            }
+            else
+            {
+                _screenMeshRenderer.material = _insideDefaultInputMaterial;
+            }
+            
+            _linkedPortal._renderContainer.SetActive(false);
         }
     }
 
-    private bool IsLocalPlayerNearby()
+    private bool IsLocalPlayerCameraNearby()
     {
-        return PlayerUtils.IsLocalPlayerNearby(transform.position, radius: 5f);
+        Camera playerCamera = GetLocalPlayerCamera();
+        if (playerCamera == null) return false;
+
+        Vector3 cameraPosition = playerCamera.transform.position;
+
+        float distance = Vector3.Distance(cameraPosition, transform.position);
+
+        return distance <= 10f;
     }
 
     private void LateUpdate()
@@ -116,10 +156,14 @@ public class DoorPortal : MonoBehaviour
 
     private void UpdateCamera()
     {
+        if (!_camera.gameObject.activeSelf)
+            return;
+
         if (!_camera.enabled)
             return;
 
         Camera playerCamera = GetLocalPlayerCamera();
+        if (playerCamera == null) return;
 
         // 1. Find the player's transform relative to the LINKED portal
         Transform linkedTransform = _linkedPortal.transform;
