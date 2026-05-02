@@ -3,6 +3,7 @@ using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.Objects;
 using GameNetcodeStuff;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.PeekInside.MonoBehaviours;
 
@@ -10,13 +11,13 @@ public class DoorPortal : MonoBehaviour
 {
     #region Unity Editor
     [SerializeField]
-    private MeshRenderer _screenMeshRenderer;
+    private MeshRenderer _screenMeshRenderer; // The screen for this portal.
 
     [SerializeField]
     private GameObject _cameraContainer;
 
     [SerializeField]
-    private Camera _camera;
+    private Camera _camera; // The camera that renders the view of this portal.
 
     [Space(10f)]
     [Header("Portal Outside")]
@@ -42,16 +43,40 @@ public class DoorPortal : MonoBehaviour
     public DoorPortal LinkedPortal { get; private set; }
     public bool HasLinkedPortal => LinkedPortal != null;
 
-    private MainEntranceInfo _mainEntrance;
+    public bool IsCameraRendering => _cameraContainer != null && _cameraContainer.activeSelf;
+
+    private MainEntranceData _mainEntrance;
 
     private RenderTexture _outputRenderTexture;
     private Material _outputMaterial;
 
     private Material _inputMaterial;
 
-    public void SetMainEntranceInfo(MainEntranceInfo mainEntrance)
+    public void SetMainEntranceData(MainEntranceData mainEntrance)
     {
         _mainEntrance = mainEntrance;
+
+        if (_mainEntrance == null)
+            return;
+
+        HDAdditionalCameraData additionalCameraData = _camera.GetComponent<HDAdditionalCameraData>();
+
+        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        {
+            _outputRenderTexture = _outsideOutputRenderTexture;
+            _outputMaterial = _outsideOutputMaterial;
+
+            additionalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
+        }
+        else
+        {
+            _outputRenderTexture = _insideOutputRenderTexture;
+            _outputMaterial = _insideOutputMaterial;
+
+            additionalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+        }
+
+        _camera.targetTexture = _outputRenderTexture;
     }
 
     public void LinkPortal(DoorPortal other)
@@ -74,18 +99,8 @@ public class DoorPortal : MonoBehaviour
 
     private void Awake()
     {
-        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
-        {
-            _outputRenderTexture = _outsideOutputRenderTexture;
-            _outputMaterial = _outsideOutputMaterial;
-        }
-        else
-        {
-            _outputRenderTexture = _insideOutputRenderTexture;
-            _outputMaterial = _insideOutputMaterial;
-        }
-
-        _camera.targetTexture = _outputRenderTexture;
+        SetScreenEnabled(false);
+        SetRenderingEnabled(false);
     }
 
     private void Update()
@@ -131,10 +146,25 @@ public class DoorPortal : MonoBehaviour
     {
         _screenMeshRenderer.gameObject.SetActive(value);
 
+        if (_mainEntrance == null)
+            return;
+
         if (_mainEntrance.HasViewBlocker)
         {
-            _mainEntrance.ViewBlockerObject.SetActive(!value);
+            if (IsCameraRendering)
+            {
+                _mainEntrance.ViewBlockerObject.SetActive(false);
+            }
+            else
+            {
+                _mainEntrance.ViewBlockerObject.SetActive(!value);
+            }
         }
+
+        // TODO: Add this back in later
+        //_mainEntrance.SetDoorObjectsEnabled(!IsCameraRendering);
+
+        _mainEntrance.SetDoorObjectsEnabled(false);
     }
 
     private void LateUpdate()
@@ -156,42 +186,88 @@ public class DoorPortal : MonoBehaviour
         Camera playerCamera = GetLocalPlayerCamera();
         if (playerCamera == null) return;
 
-        // 1. Find the player's transform relative to the LINKED portal
-        Transform linkedTransform = LinkedPortal.transform;
+        Transform linkedScreen = LinkedPortal._screenMeshRenderer.transform;
+        Transform thisScreen = _screenMeshRenderer.transform;
 
-        // 2. Calculate the relative offset of the player camera to the linked portal
-        Matrix4x4 relativeMatrix = transform.localToWorldMatrix
-            * linkedTransform.worldToLocalMatrix
-            * playerCamera.transform.localToWorldMatrix;
+        // --- 1. Position & Rotation (unchanged, already correct) ---
+        Matrix4x4 linkedFlipped = linkedScreen.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0f, 180f, 0f));
 
-        // 3. Apply that offset to this portal's camera
+        Matrix4x4 relativeTransform = thisScreen.localToWorldMatrix * Matrix4x4.Inverse(linkedFlipped);
+
         _camera.transform.SetPositionAndRotation(
-            relativeMatrix.GetColumn(3),
-            relativeMatrix.rotation
+            relativeTransform.MultiplyPoint(playerCamera.transform.position),
+            relativeTransform.rotation * playerCamera.transform.rotation
         );
 
-        _camera.fieldOfView = playerCamera.fieldOfView;
-
-        // 4. Apply oblique near-plane clipping so geometry behind the
-        //    portal entrance doesn't bleed into the render
-        SetObliqueNearPlane(playerCamera);
+        // --- 2. Oblique Near-Clip Projection ---
+        SetObliqueNearClipPlane(playerCamera);
     }
 
-    private void SetObliqueNearPlane(Camera playerCamera)
+    private void SetObliqueNearClipPlane(Camera playerCamera)
     {
-        // Get the portal plane in camera-local space
-        Transform clipPlane = LinkedPortal.transform;
+        Transform screenTransform = _screenMeshRenderer.transform;
 
-        int dot = System.Math.Sign(Vector3.Dot(clipPlane.forward, clipPlane.position - _camera.transform.position));
+        // Step 1: Build an off-axis projection matrix whose frustum edges
+        // are pinned to the exact bounds of this portal's screen.
+        // This ensures the RenderTexture only captures pixels visible through
+        // the screen rect, with correct perspective depth.
+        Matrix4x4 offAxisMatrix = CalculateOffAxisProjectionMatrix(playerCamera);
 
-        Vector3 camSpacePos = _camera.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
-        Vector3 camSpaceNormal = _camera.worldToCameraMatrix.MultiplyVector(clipPlane.forward) * dot;
+        // Step 2: Apply the oblique near-clip on top of the off-axis matrix.
+        // We temporarily assign it so CalculateObliqueMatrix has a correct base to work from.
+        _camera.projectionMatrix = offAxisMatrix;
 
-        float camSpaceDist = -Vector3.Dot(camSpacePos, camSpaceNormal);
+        Plane clipPlane = new Plane(screenTransform.forward, screenTransform.position);
 
-        var clipPlaneCamSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDist);
+        Vector4 clipPlaneVec = new Vector4(
+            clipPlane.normal.x,
+            clipPlane.normal.y,
+            clipPlane.normal.z,
+            clipPlane.distance
+        );
 
-        _camera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCamSpace);
+        Vector4 clipPlaneCameraSpace =
+            Matrix4x4.Transpose(Matrix4x4.Inverse(_camera.worldToCameraMatrix)) * clipPlaneVec;
+
+        _camera.projectionMatrix = _camera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+    }
+
+    private Matrix4x4 CalculateOffAxisProjectionMatrix(Camera playerCamera)
+    {
+        Transform screenTransform = _screenMeshRenderer.transform;
+        Vector3 camPos = _camera.transform.position;
+
+        // Get the four corners of the screen quad in world space.
+        Vector3 scale = screenTransform.lossyScale;
+        float halfW = scale.x * 0.5f;
+        float halfH = scale.y * 0.5f;
+
+        Vector3 bl = screenTransform.position - screenTransform.right * halfW - screenTransform.up * halfH;
+        Vector3 br = screenTransform.position + screenTransform.right * halfW - screenTransform.up * halfH;
+        Vector3 tl = screenTransform.position - screenTransform.right * halfW + screenTransform.up * halfH;
+
+        // Express the corner vectors in the portal camera's local space.
+        Vector3 camRight = _camera.transform.right;
+        Vector3 camUp = _camera.transform.up;
+        Vector3 camForward = _camera.transform.forward;
+
+        Vector3 toBL = bl - camPos;
+        Vector3 toBR = br - camPos;
+        Vector3 toTL = tl - camPos;
+
+        float nearClip = playerCamera.nearClipPlane;
+        float farClip = playerCamera.farClipPlane;
+
+        // Project each corner onto the camera forward axis to get its depth.
+        // Then scale each corner's lateral offset to the near clip plane (similar triangles).
+        // Use each corner's own depth so the frustum edges exactly hit the screen corners,
+        // regardless of the camera's angle relative to the screen.
+        float left = Vector3.Dot(toBL, camRight) / Vector3.Dot(toBL, camForward) * nearClip;
+        float right = Vector3.Dot(toBR, camRight) / Vector3.Dot(toBR, camForward) * nearClip;
+        float bottom = Vector3.Dot(toBL, camUp) / Vector3.Dot(toBL, camForward) * nearClip;
+        float top = Vector3.Dot(toTL, camUp) / Vector3.Dot(toTL, camForward) * nearClip;
+
+        return Matrix4x4.Frustum(left, right, bottom, top, nearClip, farClip);
     }
 
     private static Camera GetLocalPlayerCamera()

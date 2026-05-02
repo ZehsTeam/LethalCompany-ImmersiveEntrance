@@ -161,7 +161,7 @@
     <AssetBundleFileName>peekinside_assets</AssetBundleFileName>
     <AssetBundleFolder>D:\LethalCompanyUnityProjects\LethalCompanyV81\Assets\LethalCompany\Mods\AssetBundles</AssetBundleFolder>
     
-    <GaleProfileName>Mod Development</GaleProfileName>
+    <GaleProfileName>PeekInside Development</GaleProfileName>
     
     <GaleDataFolder>$(AppData)\com.kesomannen.gale</GaleDataFolder>
   </PropertyGroup>
