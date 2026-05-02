@@ -10,6 +10,13 @@ internal static class ConfigManager
     // Misc
     public static ConfigEntry<bool> Misc_ExtendedLogging { get; private set; }
 
+    // Door Portals
+    public static ConfigEntry<bool> DoorPortals_Enabled { get; private set; }
+    public static ConfigEntry<float> DoorPortals_ActiveRange { get; private set; }
+
+    // Debug
+    public static ConfigEntry<bool> Debug_HideDoorObjects { get; private set; }
+
     public static void Initialize(ConfigFile configFile)
     {
         ConfigFile = configFile;
@@ -22,5 +29,12 @@ internal static class ConfigManager
 
         // Misc
         Misc_ExtendedLogging = ConfigHelper.Bind("Misc", "ExtendedLogging", defaultValue: false, "Enable extended logging.");
+
+        // Door Portals
+        DoorPortals_Enabled =     ConfigHelper.Bind("Door Portals", "Enabled",     defaultValue: true, "");
+        DoorPortals_ActiveRange = ConfigHelper.Bind("Door Portals", "ActiveRange", defaultValue: 10f,  "");
+
+        // Debug
+        Debug_HideDoorObjects = ConfigHelper.Bind("Debug", "HideDoorObjects", defaultValue: false, "");
     }
 }

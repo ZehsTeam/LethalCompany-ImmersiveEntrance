@@ -6,10 +6,11 @@ namespace com.github.zehsteam.PeekInside.Patches;
 [HarmonyPatch(typeof(StartOfRound))]
 internal static class StartOfRound_Patches
 {
-    [HarmonyPatch(nameof(StartOfRound.ShipHasLeft))]
+    [HarmonyPatch(nameof(StartOfRound.EndOfGame))]
     [HarmonyPostfix]
-    private static void ShipHasLeft_Patch()
+    private static void EndOfGame_Patch()
     {
-        EntranceManager.OnShipHasLeft();
+        EntranceManager.OnEndOfGame();
+        RoundManager_Patches.OnEndOfGame();
     }
 }

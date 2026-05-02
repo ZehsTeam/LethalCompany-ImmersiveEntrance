@@ -10,9 +10,7 @@ internal class CoroutineRunner : MonoBehaviour
     public static CoroutineRunner Spawn()
     {
         if (Instance != null)
-        {
             return Instance;
-        }
 
         var gameObject = new GameObject($"{MyPluginInfo.PLUGIN_NAME} {nameof(CoroutineRunner)}", [typeof(CoroutineRunner)])
         {

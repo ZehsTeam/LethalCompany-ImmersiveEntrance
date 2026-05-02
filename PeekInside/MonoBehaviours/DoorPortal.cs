@@ -1,5 +1,6 @@
 ﻿using com.github.zehsteam.PeekInside.Extensions;
 using com.github.zehsteam.PeekInside.Helpers;
+using com.github.zehsteam.PeekInside.Managers;
 using com.github.zehsteam.PeekInside.Objects;
 using GameNetcodeStuff;
 using UnityEngine;
@@ -37,6 +38,18 @@ public class DoorPortal : MonoBehaviour
     {
         if (_linkedPortal == null)
             return;
+
+        bool enabled = ConfigManager.DoorPortals_Enabled.Value;
+
+        if (!enabled)
+        {
+            if (_isDrawing)
+            {
+                SetDrawing(false);
+            }
+
+            return;
+        }
 
         if (IsLocalPlayerCameraNearby())
         {
@@ -99,6 +112,104 @@ public class DoorPortal : MonoBehaviour
 
         _screen.gameObject.SetActive(value);
 
+        UpdateDoor();
+    }
+    #endregion
+
+    #region Rendering
+    private void CreateViewTexture()
+    {
+        bool CanCreate()
+        {
+            if (_viewTexture == null)
+                return true;
+
+            if (_viewTexture.width != Screen.width)
+                return true;
+
+            if (_viewTexture.height != Screen.height)
+                return true;
+
+            return false;
+        }
+
+        if (!CanCreate())
+            return;
+
+        _viewTexture?.Release();
+        _viewTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.DefaultHDR);
+
+        _portalCamera.targetTexture = _viewTexture;
+
+        _linkedPortal?.SetScreenRenderTexture(_viewTexture);
+    }
+
+    private bool IsRendering()
+    {
+        return _renderingContainer.activeSelf;
+    }
+
+    private void SetRendering(bool value)
+    {
+        _renderingContainer.SetActive(value);
+
+        if (_mainEntrance == null)
+            return;
+
+        if (!_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        {
+            FacilityOcclusionHelper.RenderFacility();
+        }
+
+        UpdateDoor();
+    }
+
+    private void UpdatePortalCamera()
+    {
+        if (!IsRendering())
+            return;
+
+        if (!TryGetLocalPlayerCamera(out Camera playerCamera))
+            return;
+
+        CreateViewTexture(); // Will create a new render texture if the screen size has changed
+
+        Transform linkedScreen = _linkedPortal._screen.transform;
+        Transform thisScreen = _screen.transform;
+
+        Matrix4x4 linkedFlipped = linkedScreen.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0f, 180f, 0f));
+
+        Matrix4x4 relativeTransform = thisScreen.localToWorldMatrix * Matrix4x4.Inverse(linkedFlipped);
+
+        _portalCamera.transform.SetPositionAndRotation(
+            relativeTransform.MultiplyPoint(playerCamera.transform.position),
+            relativeTransform.rotation * playerCamera.transform.rotation
+        );
+
+        SetObliqueNearClipPlane(playerCamera);
+    }
+
+    private void SetObliqueNearClipPlane(Camera playerCamera)
+    {
+        Transform screenTransform = _screen.transform;
+
+        var clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
+
+        var clipPlaneVec = new Vector4(
+            clipPlane.normal.x,
+            clipPlane.normal.y,
+            clipPlane.normal.z,
+            clipPlane.distance
+        );
+
+        Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
+
+        _portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+    }
+    #endregion
+
+    private void UpdateDoor()
+    {
         if (_mainEntrance == null)
             return;
 
@@ -110,79 +221,21 @@ public class DoorPortal : MonoBehaviour
             }
             else
             {
-                _mainEntrance.ViewBlockerObject.SetActive(!value);
+                _mainEntrance.ViewBlockerObject.SetActive(!_isDrawing);
             }
         }
 
-        // Commented this out for debugging to have a clean view. Add this back in later.
-        //_mainEntrance.SetDoorObjectsEnabled(!IsRendering());
+        bool hideDoorObjects = ConfigManager.Debug_HideDoorObjects.Value;
 
-        _mainEntrance.SetDoorObjectsEnabled(false);
+        if (hideDoorObjects)
+        {
+            _mainEntrance.SetDoorObjectsEnabled(false);
+        }
+        else
+        {
+            _mainEntrance.SetDoorObjectsEnabled(!IsRendering());
+        }
     }
-    #endregion
-
-    #region Rendering
-    private void CreateViewTexture()
-    {
-        _viewTexture = new RenderTexture(Screen.width, Screen.height, 0);
-        _portalCamera.targetTexture = _viewTexture;
-    }
-
-    private bool IsRendering()
-    {
-        return _renderingContainer.activeSelf && _portalCamera.enabled;
-    }
-
-    private void SetRendering(bool value)
-    {
-        _renderingContainer.SetActive(value);
-        _portalCamera.enabled = true;
-    }
-
-    private void UpdatePortalCamera()
-    {
-        if (!IsRendering())
-            return;
-
-        Camera playerCamera = GetLocalPlayerCamera();
-        if (playerCamera == null) return;
-
-        Transform linkedScreen = _linkedPortal._screen.transform;
-        Transform thisScreen = _screen.transform;
-
-        // --- 1. Position & Rotation (unchanged, already correct) ---
-        Matrix4x4 linkedFlipped = linkedScreen.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0f, 180f, 0f));
-
-        Matrix4x4 relativeTransform = thisScreen.localToWorldMatrix * Matrix4x4.Inverse(linkedFlipped);
-
-        _portalCamera.transform.SetPositionAndRotation(
-            relativeTransform.MultiplyPoint(playerCamera.transform.position),
-            relativeTransform.rotation * playerCamera.transform.rotation
-        );
-
-        // --- 2. Oblique Near-Clip Projection ---
-        SetObliqueNearClipPlane(playerCamera);
-    }
-
-    private void SetObliqueNearClipPlane(Camera playerCamera)
-    {
-        Transform screenTransform = _screen.transform;
-
-        Plane clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
-
-        Vector4 clipPlaneVec = new Vector4(
-            clipPlane.normal.x,
-            clipPlane.normal.y,
-            clipPlane.normal.z,
-            clipPlane.distance
-        );
-
-        Vector4 clipPlaneCameraSpace =
-            Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
-
-        _portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
-    }
-    #endregion
 
     #region Player Camera
     private bool IsLocalPlayerCameraNearby()
@@ -194,7 +247,9 @@ public class DoorPortal : MonoBehaviour
 
         float distance = Vector3.Distance(cameraPosition, transform.position);
 
-        return distance <= 10f;
+        float range = ConfigManager.DoorPortals_ActiveRange.Value;
+
+        return distance <= range;
     }
 
     private static Camera GetLocalPlayerCamera()

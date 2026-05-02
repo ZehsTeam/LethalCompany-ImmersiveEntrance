@@ -116,7 +116,7 @@ internal static class EntranceManager
         InsideMainEntrance.DoorPortal.LinkPortal(OutsideMainEntrance.DoorPortal);
     }
 
-    public static void OnShipHasLeft()
+    public static void OnEndOfGame()
     {
         OutsideMainEntrance.Reset();
         InsideMainEntrance.Reset();
