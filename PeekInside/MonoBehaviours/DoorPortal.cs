@@ -12,19 +12,23 @@ public class DoorPortal : MonoBehaviour
 {
     #region Unity Editor
     [SerializeField]
-    private MeshRenderer _screen; // The screen for this portal.
+    private MeshRenderer _screen;
 
     [SerializeField]
-    private Camera _portalCamera; // The camera that renders the view of this portal.
+    private Camera _portalCamera;
 
     [SerializeField]
     private GameObject _renderingContainer;
+
+    [SerializeField]
+    private Light _nightVision;
     #endregion
 
     private MainEntranceData _mainEntrance;
     private DoorPortal _linkedPortal;
     private RenderTexture _viewTexture;
     private bool _isDrawing;
+    private bool _isInRange;
 
     private void Awake()
     {
@@ -53,17 +57,17 @@ public class DoorPortal : MonoBehaviour
 
         if (IsLocalPlayerCameraNearby())
         {
-            if (_isDrawing) return;
+            if (_isInRange) return;
+            _isInRange = true;
 
-            SetDrawing(true);
-            _linkedPortal.SetRendering(true);
+            OnEnterRange();
         }
         else
         {
-            if (!_isDrawing) return;
+            if (!_isInRange) return;
+            _isInRange = false;
 
-            SetDrawing(false);
-            _linkedPortal.SetRendering(false);
+            OnExitRange();
         }
     }
 
@@ -98,6 +102,29 @@ public class DoorPortal : MonoBehaviour
         SetScreenRenderTexture(other._viewTexture);
 
         Logger.LogInfo($"[{nameof(DoorPortal)}] Linked portal {_mainEntrance.EntranceTeleport.GetLogInfo()} -> {other._mainEntrance.EntranceTeleport.GetLogInfo()}");
+    }
+    
+    private void OnEnterRange()
+    {
+        SetDrawing(true);
+        _linkedPortal.SetRendering(true);
+
+        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        {
+            FacilityHelper.RenderFacility();
+            FacilityHelper.SetFogEnabled(true);
+        }
+    }
+
+    private void OnExitRange()
+    {
+        SetDrawing(false);
+        _linkedPortal.SetRendering(false);
+
+        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        {
+            FacilityHelper.SetFogEnabled(false);
+        }
     }
 
     #region Drawing
@@ -156,12 +183,19 @@ public class DoorPortal : MonoBehaviour
         if (_mainEntrance == null)
             return;
 
-        if (!_mainEntrance.EntranceTeleport.isEntranceToBuilding)
-        {
-            FacilityOcclusionHelper.RenderFacility();
-        }
-
+        UpdateNightVision();
         UpdateDoor();
+    }
+
+    private void UpdateNightVision()
+    {
+        if (_mainEntrance == null)
+            return;
+
+        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+            return;
+
+        _nightVision.enabled = IsRendering();
     }
 
     private void UpdatePortalCamera()

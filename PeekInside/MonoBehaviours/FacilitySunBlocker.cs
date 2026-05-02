@@ -14,7 +14,7 @@ public class FacilitySunBlocker : MonoBehaviour
         GameObject parentObject = GameObject.Find("Environment");
         Transform parentTransform = parentObject?.transform ?? null;
 
-        Object.Instantiate(Assets.FacilitySunBlockerPrefab, parentTransform);
+        Instantiate(Assets.FacilitySunBlockerPrefab, parentTransform);
     }
 
     private void Awake()
