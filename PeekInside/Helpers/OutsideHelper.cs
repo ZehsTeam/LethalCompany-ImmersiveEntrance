@@ -3,47 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.PeekInside.Helpers;
 
-internal static class FacilityHelper
+internal static class OutsideHelper
 {
-    public static void RenderFacility()
-    {
-        if (StartOfRound.Instance == null)
-            return;
-
-        AdjacentRoomCullingModified occlusionCuller = StartOfRound.Instance.occlusionCuller;
-        if (occlusionCuller == null) return;
-
-        if (!occlusionCuller.enabled)
-            return;
-
-        occlusionCuller.SetToStartTile();
-    }
-
-    public static void SetFogEnabled(bool value)
-    {
-        if (RoundManager.Instance == null)
-            return;
-
-        if (PlayerUtils.LocalPlayerScript == null)
-            return;
-
-        if (PlayerUtils.LocalPlayerScript.isInsideFactory)
-            return;
-
-        LocalVolumetricFog indoorFog = RoundManager.Instance.indoorFog;
-
-        if (indoorFog == null)
-            return;
-
-        indoorFog.enabled = value;
-    }
-
-
-
     public static GameObject GetDoorViewBlocker(EntranceTeleport entranceTeleport)
     {
         if (entranceTeleport == null)
@@ -53,11 +17,6 @@ internal static class FacilityHelper
             return null;
 
         if (container.TryFind("Plane", out Transform viewBlocker))
-        {
-            return viewBlocker.gameObject;
-        }
-
-        if (container.TryFind("LightBehindDoor", out viewBlocker))
         {
             return viewBlocker.gameObject;
         }
@@ -73,13 +32,7 @@ internal static class FacilityHelper
         if (!TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
             return [];
 
-        string[] names = [
-            // Facility/Mineshaft
-            "SteelDoorFake", "SteelDoorFake (1)", "DoorFrame",
-
-            // Manor
-            "DoorMesh", "DoorMesh (1)", "WideDoorFrame (1)"
-        ];
+        string[] names = ["SteelDoorFake", "SteelDoorFake (1)", "DoorFrame"];
 
         List<GameObject> doorObjects = [];
 
@@ -101,7 +54,13 @@ internal static class FacilityHelper
             return entranceTeleport.thisEntranceAnimator.transform;
         }
 
-        return GameObject.FindGameObjectWithTag("InsideEntranceDoor")?.transform ?? null;
+        try
+        {
+            return GameObject.Find("Environment/OutsideEntranceVisualDoorsContainer").transform;
+        }
+        catch { }
+
+        return null;
     }
 
     private static bool TryGetVisualDoorsContainer(EntranceTeleport entranceTeleport, out Transform transform)

@@ -10,6 +10,11 @@ internal static class EntranceTeleportExtensions
         return entranceTeleport.entranceId == 0;
     }
 
+    public static bool IsOutside(this EntranceTeleport entranceTeleport)
+    {
+        return entranceTeleport.isEntranceToBuilding;
+    }
+
     public static string GetLogInfo(this EntranceTeleport entranceTeleport)
     {
         if (entranceTeleport == null)

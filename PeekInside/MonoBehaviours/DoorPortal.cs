@@ -43,32 +43,7 @@ public class DoorPortal : MonoBehaviour
         if (_linkedPortal == null)
             return;
 
-        bool enabled = ConfigManager.DoorPortals_Enabled.Value;
-
-        if (!enabled)
-        {
-            if (_isDrawing)
-            {
-                SetDrawing(false);
-            }
-
-            return;
-        }
-
-        if (IsLocalPlayerCameraNearby())
-        {
-            if (_isInRange) return;
-            _isInRange = true;
-
-            OnEnterRange();
-        }
-        else
-        {
-            if (!_isInRange) return;
-            _isInRange = false;
-
-            OnExitRange();
-        }
+        UpdateScreenVisibility();
     }
 
     private void LateUpdate()
@@ -85,7 +60,7 @@ public class DoorPortal : MonoBehaviour
 
         HDAdditionalCameraData additionalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
 
-        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        if (_mainEntrance.IsOutside)
         {
             additionalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
         }
@@ -103,25 +78,58 @@ public class DoorPortal : MonoBehaviour
 
         Logger.LogInfo($"[{nameof(DoorPortal)}] Linked portal {_mainEntrance.EntranceTeleport.GetLogInfo()} -> {other._mainEntrance.EntranceTeleport.GetLogInfo()}");
     }
-    
-    private void OnEnterRange()
+
+    private void UpdateScreenVisibility()
+    {
+        bool enabled = ConfigManager.DoorPortals_Enabled.Value;
+
+        if (!enabled)
+        {
+            if (_isDrawing)
+            {
+                SetDrawing(false);
+            }
+
+            return;
+        }
+
+        bool inRange = IsLocalPlayerCameraInRange();
+        bool isScreenVisible = Utils.IsVisibleFromCamera(_screen, GetLocalPlayerCamera());
+
+        if (inRange && isScreenVisible)
+        {
+            if (_isInRange) return;
+            _isInRange = true;
+
+            OnLocalPlayerEnterRange();
+        }
+        else
+        {
+            if (!_isInRange) return;
+            _isInRange = false;
+
+            OnLocalPlayerExitRange();
+        }
+    }
+
+    private void OnLocalPlayerEnterRange()
     {
         SetDrawing(true);
         _linkedPortal.SetRendering(true);
 
-        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        if (_mainEntrance.IsOutside)
         {
             FacilityHelper.RenderFacility();
             FacilityHelper.SetFogEnabled(true);
         }
     }
 
-    private void OnExitRange()
+    private void OnLocalPlayerExitRange()
     {
         SetDrawing(false);
         _linkedPortal.SetRendering(false);
 
-        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        if (_mainEntrance.IsOutside)
         {
             FacilityHelper.SetFogEnabled(false);
         }
@@ -192,7 +200,7 @@ public class DoorPortal : MonoBehaviour
         if (_mainEntrance == null)
             return;
 
-        if (_mainEntrance.EntranceTeleport.isEntranceToBuilding)
+        if (_mainEntrance.IsOutside)
             return;
 
         _nightVision.enabled = IsRendering();
@@ -247,15 +255,15 @@ public class DoorPortal : MonoBehaviour
         if (_mainEntrance == null)
             return;
 
-        if (_mainEntrance.HasViewBlocker)
+        if (_mainEntrance.HasDoorViewBlocker)
         {
             if (IsRendering())
             {
-                _mainEntrance.ViewBlockerObject.SetActive(false);
+                _mainEntrance.DoorViewBlocker.SetActive(false);
             }
             else
             {
-                _mainEntrance.ViewBlockerObject.SetActive(!_isDrawing);
+                _mainEntrance.DoorViewBlocker.SetActive(!_isDrawing);
             }
         }
 
@@ -272,16 +280,15 @@ public class DoorPortal : MonoBehaviour
     }
 
     #region Player Camera
-    private bool IsLocalPlayerCameraNearby()
+    private bool IsLocalPlayerCameraInRange()
     {
         if (!TryGetLocalPlayerCamera(out Camera playerCamera))
             return false;
 
-        Vector3 cameraPosition = playerCamera.transform.position;
-
-        float distance = Vector3.Distance(cameraPosition, transform.position);
-
         float range = ConfigManager.DoorPortals_ActiveRange.Value;
+
+        Vector3 cameraPosition = playerCamera.transform.position;
+        float distance = Vector3.Distance(cameraPosition, transform.position);
 
         return distance <= range;
     }

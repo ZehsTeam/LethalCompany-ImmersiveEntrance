@@ -50,4 +50,13 @@ internal static class Utils
         if (percent >= 100f) return true;
         return Random.value * 100f <= percent;
     }
+
+    public static bool IsVisibleFromCamera(Renderer renderer, Camera camera)
+    {
+        if (renderer == null || camera == null)
+            return false;
+
+        Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+        return GeometryUtility.TestPlanesAABB(frustumPlanes, renderer.bounds);
+    }
 }

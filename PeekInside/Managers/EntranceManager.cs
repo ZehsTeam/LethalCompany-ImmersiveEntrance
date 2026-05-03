@@ -1,9 +1,7 @@
 ﻿using com.github.zehsteam.PeekInside.Extensions;
+using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.MonoBehaviours;
 using com.github.zehsteam.PeekInside.Objects;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -28,13 +26,14 @@ internal static class EntranceManager
 
         MainEntranceData mainEntrance;
 
-        if (entranceTeleport.isEntranceToBuilding)
+        if (entranceTeleport.IsOutside())
         {
             OutsideMainEntrance ??= new();
             OutsideMainEntrance.Reset();
             mainEntrance = OutsideMainEntrance;
             mainEntrance.EntranceTeleport = entranceTeleport;
-            AssignOutsideMainEntranceObjects();
+            mainEntrance.DoorViewBlocker = OutsideHelper.GetDoorViewBlocker(entranceTeleport);
+            mainEntrance.DoorObjects = OutsideHelper.GetDoorObjects(entranceTeleport);
         }
         else
         {
@@ -42,16 +41,17 @@ internal static class EntranceManager
             InsideMainEntrance.Reset();
             mainEntrance = InsideMainEntrance;
             mainEntrance.EntranceTeleport = entranceTeleport;
-            AssignInsideMainEntranceObjects();
+            mainEntrance.DoorViewBlocker = FacilityHelper.GetDoorViewBlocker(entranceTeleport);
+            mainEntrance.DoorObjects = FacilityHelper.GetDoorObjects(entranceTeleport);
         }
 
-        if (mainEntrance.HasViewBlocker)
+        if (mainEntrance.HasDoorViewBlocker)
         {
-            Logger.LogInfo($"[{nameof(EntranceManager)}] Successfully found main entrance view blocker! {entranceTeleport.GetLogInfo()}");
+            Logger.LogInfo($"[{nameof(EntranceManager)}] Successfully found main entrance door view blocker! {entranceTeleport.GetLogInfo()}");
         }
         else
         {
-            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to find main entrance view blocker. {entranceTeleport.GetLogInfo()}");
+            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to find main entrance door view blocker. {entranceTeleport.GetLogInfo()}");
         }
 
         Vector3 position = entranceTeleport.transform.position;
@@ -122,83 +122,5 @@ internal static class EntranceManager
         InsideMainEntrance.Reset();
 
         _linkedMainEntrancePortals = false;
-    }
-
-    private static void AssignOutsideMainEntranceObjects()
-    {
-        if (OutsideMainEntrance == null)
-            return;
-
-        EntranceTeleport entranceTeleport = OutsideMainEntrance.EntranceTeleport;
-
-        if (entranceTeleport == null)
-            return;
-
-        Transform parentTransform;
-
-        if (entranceTeleport.thisEntranceAnimator != null)
-        {
-            parentTransform = entranceTeleport.thisEntranceAnimator.transform;
-        }
-        else
-        {
-            parentTransform = GameObject.Find("Environment/OutsideEntranceVisualDoorsContainer")?.transform ?? null;
-        }
-
-        if (parentTransform == null)
-            return;
-
-        Transform viewBlockerTransform = parentTransform.Find("Plane");
-
-        OutsideMainEntrance.ViewBlockerObject = viewBlockerTransform?.gameObject;
-
-        AssignDoorObjects(OutsideMainEntrance, parentTransform);
-    }
-
-    private static void AssignInsideMainEntranceObjects()
-    {
-        if (InsideMainEntrance == null)
-            return;
-
-        if (RoundManager.Instance == null)
-            return;
-
-        if (RoundManager.Instance.dungeonGenerator == null)
-            return;
-
-        try
-        {
-            GameObject levelGenerationRoot = RoundManager.Instance.dungeonGenerator.Root;
-            
-            Transform parentTransform = levelGenerationRoot.transform.Find("StartRoom(Clone)").Find("FactoryEntranceTeleVisualDoorsContainer");
-            Transform viewBlockerTransform = parentTransform.Find("LightBehindDoor");
-
-            InsideMainEntrance.ViewBlockerObject = viewBlockerTransform?.gameObject;
-
-            AssignDoorObjects(InsideMainEntrance, parentTransform);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError($"[{nameof(EntranceManager)}] Failed to get inside main entrance view blocker. {ex}");
-        }
-    }
-
-    private static void AssignDoorObjects(MainEntranceData mainEntrance, Transform parent)
-    {
-        string[] doorObjectNames = ["SteelDoorFake", "SteelDoorFake (1)", "DoorFrame"];
-
-        List<GameObject> doorObjects = [];
-
-        for (int i = 0; i < parent.childCount; i++)
-        {
-            Transform child = parent.GetChild(i);
-
-            if (doorObjectNames.Contains(child.name))
-            {
-                doorObjects.Add(child.gameObject);
-            }
-        }
-
-        mainEntrance.DoorObjects = doorObjects;
     }
 }
