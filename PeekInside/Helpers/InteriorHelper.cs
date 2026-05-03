@@ -1,4 +1,6 @@
 ﻿using com.github.zehsteam.PeekInside.Extensions;
+using com.github.zehsteam.PeekInside.Objects;
+using DunGen.Graph;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,9 +9,9 @@ using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.PeekInside.Helpers;
 
-internal static class FacilityHelper
+internal static class InteriorHelper
 {
-    public static void RenderFacility()
+    public static void RenderInterior()
     {
         if (StartOfRound.Instance == null)
             return;
@@ -52,12 +54,7 @@ internal static class FacilityHelper
         if (!TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
             return null;
 
-        if (container.TryFind("Plane", out Transform viewBlocker))
-        {
-            return viewBlocker.gameObject;
-        }
-
-        if (container.TryFind("LightBehindDoor", out viewBlocker))
+        if (container.TryFind("LightBehindDoor", out Transform viewBlocker))
         {
             return viewBlocker.gameObject;
         }
@@ -108,5 +105,52 @@ internal static class FacilityHelper
     {
         transform = GetVisualDoorsContainer(entranceTeleport);
         return transform != null;
+    }
+
+
+
+    public static bool IsFactoryInterior()
+    {
+        return GetCurrentInteriorType() == InteriorType.Factory;
+    }
+
+    public static bool IsManorInterior()
+    {
+        return GetCurrentInteriorType() == InteriorType.Manor;
+    }
+
+    public static bool IsMineshaftInterior()
+    {
+        return GetCurrentInteriorType() == InteriorType.Mineshaft;
+    }
+
+    public static InteriorType GetCurrentInteriorType()
+    {
+        DungeonFlow dungeonFlow = GetCurrentDungeonFlow();
+        if (dungeonFlow == null) return InteriorType.Unknown;
+
+        string name = dungeonFlow.name;
+
+        if (name.StartsWith("Level1Flow", StringComparison.OrdinalIgnoreCase))
+        {
+            return InteriorType.Factory;
+        }
+
+        if (name.StartsWith("Level2Flow", StringComparison.OrdinalIgnoreCase))
+        {
+            return InteriorType.Manor;
+        }
+
+        if (name.StartsWith("Level3Flow", StringComparison.OrdinalIgnoreCase))
+        {
+            return InteriorType.Mineshaft;
+        }
+
+        return InteriorType.Unknown;
+    }
+
+    private static DungeonFlow GetCurrentDungeonFlow()
+    {
+        return RoundManager.Instance.dungeonFlowTypes[RoundManager.Instance.currentDungeonType].dungeonFlow;
     }
 }

@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using com.github.zehsteam.PeekInside.Dependencies.LethalConfigMod;
-using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.Managers;
 using com.github.zehsteam.PeekInside.Patches;
 using HarmonyLib;
@@ -24,6 +23,8 @@ internal class Plugin : BaseUnityPlugin
 
         _harmony.PatchAll(typeof(StartOfRound_Patches));
         _harmony.PatchAll(typeof(RoundManager_Patches));
+        _harmony.PatchAll(typeof(TimeOfDay_Patches));
+        _harmony.PatchAll(typeof(MatchLocalPlayerPosition_Patches));
         _harmony.PatchAll(typeof(EntranceTeleport_Patches));
 
         Assets.Load();

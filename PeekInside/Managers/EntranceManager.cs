@@ -14,6 +14,14 @@ internal static class EntranceManager
 
     private static bool _linkedMainEntrancePortals;
 
+    public static void Reset()
+    {
+        OutsideMainEntrance.Reset();
+        InsideMainEntrance.Reset();
+
+        _linkedMainEntrancePortals = false;
+    }
+
     public static void SpawnDoorPortal(EntranceTeleport entranceTeleport)
     {
         if (entranceTeleport == null)
@@ -41,8 +49,8 @@ internal static class EntranceManager
             InsideMainEntrance.Reset();
             mainEntrance = InsideMainEntrance;
             mainEntrance.EntranceTeleport = entranceTeleport;
-            mainEntrance.DoorViewBlocker = FacilityHelper.GetDoorViewBlocker(entranceTeleport);
-            mainEntrance.DoorObjects = FacilityHelper.GetDoorObjects(entranceTeleport);
+            mainEntrance.DoorViewBlocker = InteriorHelper.GetDoorViewBlocker(entranceTeleport);
+            mainEntrance.DoorObjects = InteriorHelper.GetDoorObjects(entranceTeleport);
         }
 
         if (mainEntrance.HasDoorViewBlocker)
@@ -114,13 +122,5 @@ internal static class EntranceManager
 
         OutsideMainEntrance.DoorPortal.LinkPortal(InsideMainEntrance.DoorPortal);
         InsideMainEntrance.DoorPortal.LinkPortal(OutsideMainEntrance.DoorPortal);
-    }
-
-    public static void OnEndOfGame()
-    {
-        OutsideMainEntrance.Reset();
-        InsideMainEntrance.Reset();
-
-        _linkedMainEntrancePortals = false;
     }
 }

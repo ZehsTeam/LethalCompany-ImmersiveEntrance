@@ -1,24 +1,67 @@
 ﻿using com.github.zehsteam.PeekInside.Extensions;
+using GameNetcodeStuff;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.PeekInside.Helpers;
 
 internal static class OutsideHelper
 {
+    public static bool IsOverridingSun { get; private set; }
+
+    public static void Reset()
+    {
+        IsOverridingSun = false;
+    }
+
+    public static void SetSunEnabled(bool value)
+    {
+        if (!value)
+        {
+            IsOverridingSun = value;
+        }
+
+        TimeOfDay timeOfDay = TimeOfDay.Instance;
+
+        if (timeOfDay == null)
+            return;
+
+        if (!PlayerUtils.TryGetLocalPlayerScript(out PlayerControllerB playerScript))
+            return;
+
+        if (!playerScript.isInsideFactory)
+            return;
+
+        IsOverridingSun = value;
+
+        timeOfDay.sunDirect.enabled = value;
+        timeOfDay.sunIndirect.enabled = value;
+
+        //HDAdditionalLightData additionalLightData = timeOfDay.indirectLightData;
+        //additionalLightData.lightDimmer = Mathf.Lerp(additionalLightData.lightDimmer, 1f, 5f * Time.deltaTime);
+    }
+
+
+
     public static GameObject GetDoorViewBlocker(EntranceTeleport entranceTeleport)
     {
         if (entranceTeleport == null)
             return null;
 
-        if (!TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
-            return null;
-
-        if (container.TryFind("Plane", out Transform viewBlocker))
+        if (TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
         {
-            return viewBlocker.gameObject;
+            if (container.TryFind("Plane", out Transform viewBlocker))
+            {
+                return viewBlocker.gameObject;
+            }
+        }
+
+        if (GameObjectHelper.TryFind("Environment/Plane", out GameObject result))
+        {
+            return result;
         }
 
         return null;
@@ -42,6 +85,11 @@ internal static class OutsideHelper
             {
                 doorObjects.Add(child.gameObject);
             }
+        }
+
+        if (GameObjectHelper.TryFind("Environment/DoorFrame (1)", out GameObject result))
+        {
+            doorObjects.Add(result);
         }
 
         return doorObjects;

@@ -1,7 +1,6 @@
 ﻿using GameNetcodeStuff;
 using System;
 using System.Linq;
-using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace com.github.zehsteam.PeekInside.Helpers;
@@ -14,6 +13,12 @@ internal static class PlayerUtils
     public static PlayerControllerB[] ConnectedPlayerScripts => [.. AllPlayerScripts.Where(IsConnected)];
     public static PlayerControllerB[] AlivePlayerScripts => [.. ConnectedPlayerScripts.Where(x => !x.isPlayerDead)];
     public static PlayerControllerB[] DeadPlayerScripts => [.. ConnectedPlayerScripts.Where(x => x.isPlayerDead)];
+
+    public static bool TryGetLocalPlayerScript(out PlayerControllerB playerScript)
+    {
+        playerScript = LocalPlayerScript;
+        return playerScript != null;
+    }
 
     public static bool IsLocalPlayer(PlayerControllerB playerScript)
     {
