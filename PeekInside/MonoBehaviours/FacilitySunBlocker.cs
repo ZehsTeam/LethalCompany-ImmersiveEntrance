@@ -2,6 +2,8 @@
 
 namespace com.github.zehsteam.PeekInside.MonoBehaviours;
 
+// TODO: Rename this to InteriorSunBlocker
+// NOTE: THIS MIGHT NOT BE NEEDED
 public class FacilitySunBlocker : MonoBehaviour
 {
     public static FacilitySunBlocker Instance { get; private set; }
