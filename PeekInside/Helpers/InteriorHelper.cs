@@ -25,25 +25,6 @@ internal static class InteriorHelper
         occlusionCuller.SetToStartTile();
     }
 
-    public static void SetFogEnabled(bool value)
-    {
-        if (RoundManager.Instance == null)
-            return;
-
-        if (PlayerUtils.LocalPlayerScript == null)
-            return;
-
-        if (PlayerUtils.LocalPlayerScript.isInsideFactory)
-            return;
-
-        LocalVolumetricFog indoorFog = RoundManager.Instance.indoorFog;
-
-        if (indoorFog == null)
-            return;
-
-        indoorFog.enabled = value;
-    }
-
 
 
     public static GameObject GetDoorViewBlocker(EntranceTeleport entranceTeleport)
@@ -109,21 +90,6 @@ internal static class InteriorHelper
 
 
 
-    public static bool IsFactoryInterior()
-    {
-        return GetCurrentInteriorType() == InteriorType.Factory;
-    }
-
-    public static bool IsManorInterior()
-    {
-        return GetCurrentInteriorType() == InteriorType.Manor;
-    }
-
-    public static bool IsMineshaftInterior()
-    {
-        return GetCurrentInteriorType() == InteriorType.Mineshaft;
-    }
-
     public static InteriorType GetCurrentInteriorType()
     {
         DungeonFlow dungeonFlow = GetCurrentDungeonFlow();
@@ -133,12 +99,12 @@ internal static class InteriorHelper
 
         if (name.StartsWith("Level1Flow", StringComparison.OrdinalIgnoreCase))
         {
-            return InteriorType.Factory;
+            return InteriorType.Facility;
         }
 
         if (name.StartsWith("Level2Flow", StringComparison.OrdinalIgnoreCase))
         {
-            return InteriorType.Manor;
+            return InteriorType.Mansion;
         }
 
         if (name.StartsWith("Level3Flow", StringComparison.OrdinalIgnoreCase))

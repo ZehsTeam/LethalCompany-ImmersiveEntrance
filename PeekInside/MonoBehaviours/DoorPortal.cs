@@ -17,6 +17,9 @@ public class DoorPortal : MonoBehaviour
     private MeshRenderer _screen;
 
     [SerializeField]
+    private MeshRenderer _screenOccluder;
+
+    [SerializeField]
     private Camera _portalCamera;
 
     [SerializeField]
@@ -30,7 +33,11 @@ public class DoorPortal : MonoBehaviour
 
     [Space(10f)]
     [SerializeField]
-    private List<InteriorDoorPortalSettings> _interiorSettingsList = [];
+    private List<DoorPortalMoonSettings> _moonSettingsList = [];
+
+    [Space(10f)]
+    [SerializeField]
+    private List<DoorPortalInteriorSettings> _interiorSettingsList = [];
     #endregion
 
     private MainEntranceData _mainEntrance;
@@ -39,8 +46,12 @@ public class DoorPortal : MonoBehaviour
     private bool _isDrawing;
     private bool _isInRange;
 
+    private LayerMask _pivotRaycastMask;
+
     private void Awake()
     {
+        _pivotRaycastMask = LayerMask.GetMask("Room");
+
         CreateViewTexture();
 
         SetDrawing(false);
@@ -78,7 +89,8 @@ public class DoorPortal : MonoBehaviour
             portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
         }
 
-        SetPivot();
+        InitializePivot();
+        ApplyScreenCrop();
         ApplyConfigSettings();
     }
 
@@ -132,7 +144,6 @@ public class DoorPortal : MonoBehaviour
         if (_mainEntrance.IsOutside)
         {
             InteriorHelper.RenderInterior();
-            InteriorHelper.SetFogEnabled(true);
         }
         else
         {
@@ -147,7 +158,7 @@ public class DoorPortal : MonoBehaviour
 
         if (_mainEntrance.IsOutside)
         {
-            InteriorHelper.SetFogEnabled(false);
+
         }
         else
         {
@@ -155,88 +166,171 @@ public class DoorPortal : MonoBehaviour
         }
     }
 
+    #region Settings
+    private DoorPortalMoonSettings GetMoonSettings()
+    {
+        return _moonSettingsList.FirstOrDefault(x => x.PlanetName == LevelHelper.GetCurrentMoonName());
+    }
+
+    private bool TryGetMoonSettings(out DoorPortalMoonSettings moonSettings)
+    {
+        moonSettings = GetMoonSettings();
+        return moonSettings != null;
+    }
+
+    private DoorPortalInteriorSettings GetInteriorSettings()
+    {
+        return _interiorSettingsList.FirstOrDefault(x => x.InteriorType == InteriorHelper.GetCurrentInteriorType());
+    }
+
+    private bool TryGetInteriorSettings(out DoorPortalInteriorSettings interiorSettings)
+    {
+        interiorSettings = GetInteriorSettings();
+        return interiorSettings != null;
+    }
+    #endregion
+
     #region Pivot
-    private void SetPivot()
+    private void InitializePivot()
     {
         if (_mainEntrance == null)
             return;
 
         if (_mainEntrance.IsOutside)
         {
-            SetDynamicPivotPositionAndRotation();
+            SetDynamicPivot();
             return;
         }
 
-        InteriorDoorPortalSettings interiorSettings = GetInteriorSettings();
-
-        if (interiorSettings == null)
+        if (TryGetInteriorSettings(out DoorPortalInteriorSettings interiorSettings))
         {
-            SetDynamicPivotPositionAndRotation();
-            return;
-        }
+            if (interiorSettings.UseDynamicPivot)
+            {
+                SetDynamicPivot();
+            }
 
-        if (interiorSettings.UseDynamicPivot)
+            _pivot.localPosition += interiorSettings.PivotPositionOffset;
+        }
+        else
         {
-            SetDynamicPivotPositionAndRotation();
+            SetDynamicPivot();
         }
-
-        _pivot.localPosition += interiorSettings.PivotPositionOffset;
     }
 
-    private void SetDynamicPivotPositionAndRotation()
+    private void SetDynamicPivot()
     {
-        Vector3 middleOrigin = transform.position;
-        Vector3 direction = _pivot.forward;
+        if (TryGetDynamicPivotPosition(out Vector3 position))
+        {
+            _pivot.position = position;
+        }
 
-        // Position
+        if (TryGetDynamicPivotRotation(out Quaternion rotation))
+        {
+            _pivot.rotation = rotation;
+        }
+    }
 
-        bool didMiddleHit = TryRaycastForPivot(middleOrigin, direction, out RaycastHit middleHit);
+    private bool TryGetDynamicPivotPosition(out Vector3 position)
+    {
+        position = Vector3.zero;
 
-        if (!didMiddleHit)
-            return;
+        Vector3 origin = _pivot.position + _pivot.forward * -0.25f;
+
+        if (!TryRaycastForPivot(origin, _pivot.forward, out RaycastHit hitForward))
+            return false;
 
         float offsetFromWall = -0.001f;
 
-        Vector3 newPosition = middleHit.point + _pivot.forward * offsetFromWall;
-        _pivot.position = newPosition;
+        Vector3 newPosition = hitForward.point + _pivot.forward * offsetFromWall;
 
-        // Rotation
+        if (TryRaycastForPivot(origin, -_pivot.up, out RaycastHit hitDown, maxDistance: 5f))
+        {
+            float yOffset = _screen.transform.lossyScale.y / 2f;
+            float yPosition = hitDown.point.y + yOffset;
 
-        Vector3 leftOrigin = middleOrigin + _pivot.right * -0.25f;
+            newPosition.y = yPosition;
+        }
+
+        position = newPosition;
+        return true;
+    }
+
+    private bool TryGetDynamicPivotRotation(out Quaternion rotation)
+    {
+        rotation = Quaternion.identity;
+
+        Vector3 origin = _pivot.position + _pivot.forward * -0.25f;
+        Vector3 direction = _pivot.forward;
+
+        Vector3 leftOrigin = origin + _pivot.right * -0.25f;
         bool didLeftHit = TryRaycastForPivot(leftOrigin, direction, out RaycastHit leftHit);
 
         if (!didLeftHit)
-            return;
+            return false;
 
-        Vector3 rightOrigin = middleOrigin + _pivot.right * 0.25f;
+        Vector3 rightOrigin = origin + _pivot.right * 0.25f;
         bool didRightHit = TryRaycastForPivot(rightOrigin, direction, out RaycastHit rightHit);
 
         if (!didRightHit)
-            return;
+            return false;
 
         Vector3 averageNormal = (leftHit.normal + rightHit.normal).normalized;
         Vector3 surfaceRight = (rightHit.point - leftHit.point).normalized;
         Vector3 surfaceForward = -averageNormal;
         Vector3 surfaceUp = Vector3.Cross(surfaceForward, surfaceRight).normalized;
 
-        _pivot.rotation = Quaternion.LookRotation(surfaceForward, surfaceUp);
+        rotation = Quaternion.LookRotation(surfaceForward, surfaceUp);
+        return true;
     }
-
-    private bool TryRaycastForPivot(Vector3 origin, Vector3 direction, out RaycastHit hit)
+    
+    private bool TryRaycastForPivot(Vector3 origin, Vector3 direction, out RaycastHit hit, float maxDistance = 1f)
     {
-        float maxDistance = 1f;
-        LayerMask layerMask = LayerMask.GetMask("Room");
-
-        return Physics.Raycast(origin, direction, out hit, maxDistance, layerMask, QueryTriggerInteraction.Ignore);
-    }
-
-    private InteriorDoorPortalSettings GetInteriorSettings()
-    {
-        return _interiorSettingsList.FirstOrDefault(x => x.InteriorType == InteriorHelper.GetCurrentInteriorType());
+        return Physics.Raycast(origin, direction, out hit, maxDistance, _pivotRaycastMask, QueryTriggerInteraction.Ignore);
     }
     #endregion
 
     #region Drawing
+    private void ApplyScreenCrop()
+    {
+        if (_mainEntrance == null)
+            return;
+
+        if (_mainEntrance.IsOutside)
+            return;
+
+        if (TryGetInteriorSettings(out DoorPortalInteriorSettings interiorSettings))
+        {
+            float cropLeft = interiorSettings.ScreenCropLeft;
+            float cropRight = interiorSettings.ScreenCropRight;
+            float cropTop = interiorSettings.ScreenCropTop;
+            float cropBottom = interiorSettings.ScreenCropBottom;
+
+            SetScreenCrop(cropLeft, cropRight, cropTop, cropBottom);
+        }
+    }
+
+    private void SetScreenCrop(float left, float right, float top, float bottom)
+    {
+        _screen.material.SetFloat("_CropLeft", left);
+        _screen.material.SetFloat("_CropRight", right);
+        _screen.material.SetFloat("_CropTop", top);
+        _screen.material.SetFloat("_CropBottom", bottom);
+
+        float xScale = 1f - left - right;
+        float yScale = 1f - top - bottom;
+
+        _screenOccluder.transform.localScale = new Vector3(xScale, yScale, 1f);
+
+        // Offset is in the screen's local space (-0.5 to 0.5 range)
+        // Move toward right when right is cropped less, toward left when left is cropped less
+        float xOffset = (left - right) * 0.5f;
+        float yOffset = (bottom - top) * 0.5f;
+
+        Vector3 previousOccluderPosition = _screenOccluder.transform.localPosition;
+
+        _screenOccluder.transform.localPosition = new Vector3(xOffset, yOffset, previousOccluderPosition.z);
+    }
+
     private void SetScreenRenderTexture(RenderTexture renderTexture)
     {
         _screen.material.SetTexture("_MainTex", renderTexture);
@@ -253,6 +347,32 @@ public class DoorPortal : MonoBehaviour
     #endregion
 
     #region Rendering
+    private void ApplyCameraViewRange()
+    {
+        if (_mainEntrance == null)
+            return;
+
+        float farClipPlane;
+
+        if (_mainEntrance.IsOutside)
+        {
+            if (TryGetMoonSettings(out DoorPortalMoonSettings moonSettings) && moonSettings.UseViewRange)
+            {
+                farClipPlane = moonSettings.ViewRange;
+            }
+            else
+            {
+                farClipPlane = ConfigManager.Portal_OutsideViewRange.Value;
+            }
+        }
+        else
+        {
+            farClipPlane = ConfigManager.Portal_InsideViewRange.Value;
+        }
+
+        _portalCamera.farClipPlane = farClipPlane;
+    }
+
     private void CreateViewTexture()
     {
         bool CanCreate()
@@ -415,21 +535,7 @@ public class DoorPortal : MonoBehaviour
 
     private void ApplyConfigSettings()
     {
-        if (_mainEntrance == null)
-            return;
-
-        float farClipPlane;
-
-        if (_mainEntrance.IsOutside)
-        {
-            farClipPlane = ConfigManager.Portal_OutsideViewRange.Value;
-        }
-        else
-        {
-            farClipPlane = ConfigManager.Portal_InsideViewRange.Value;
-        }
-
-        _portalCamera.farClipPlane = farClipPlane;
+        ApplyCameraViewRange();
     }
 
     public static void OnConfigSettingsChanged()

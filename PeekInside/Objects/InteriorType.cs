@@ -2,8 +2,8 @@
 
 public enum InteriorType
 {
-    Factory,
-    Manor,
+    Facility,
+    Mansion,
     Mineshaft,
     Unknown = 999
 }
