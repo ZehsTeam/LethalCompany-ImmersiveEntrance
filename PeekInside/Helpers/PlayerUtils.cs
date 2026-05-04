@@ -1,6 +1,8 @@
 ﻿using GameNetcodeStuff;
 using System;
+using System.Drawing;
 using System.Linq;
+using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace com.github.zehsteam.PeekInside.Helpers;
@@ -106,5 +108,40 @@ internal static class PlayerUtils
     {
         playerScript = GetRandomPlayerScript(playerScripts, excludeLocal);
         return playerScript != null;
+    }
+
+
+
+    public static Camera GetLocalPlayerCamera()
+    {
+        if (LocalPlayerScript == null || LocalPlayerScript.isPlayerDead)
+        {
+            return StartOfRound.Instance.spectateCamera;
+        }
+
+        return LocalPlayerScript.gameplayCamera;
+    }
+
+    public static bool TryGetLocalPlayerCamera(out Camera camera)
+    {
+        camera = GetLocalPlayerCamera();
+        return camera != null;
+    }
+
+    public static Size GetCameraRenderTextureSize()
+    {
+        if (TryGetLocalPlayerCamera(out Camera camera))
+        {
+            return new Size(camera.pixelWidth, camera.pixelHeight);
+        }
+
+        IngamePlayerSettings playerSettings = IngamePlayerSettings.Instance;
+
+        if (playerSettings != null && playerSettings.playerGameplayScreenTex != null)
+        {
+            return new Size(playerSettings.playerGameplayScreenTex.width, playerSettings.playerGameplayScreenTex.height);
+        }
+
+        return new Size(860, 520);
     }
 }

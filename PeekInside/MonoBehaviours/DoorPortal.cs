@@ -2,8 +2,8 @@
 using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.Managers;
 using com.github.zehsteam.PeekInside.Objects;
-using GameNetcodeStuff;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.HighDefinition;
@@ -118,7 +118,7 @@ public class DoorPortal : MonoBehaviour
         }
 
         bool inRange = IsLocalPlayerCameraInRange();
-        bool isScreenVisible = Utils.IsVisibleFromCamera(_screen, GetLocalPlayerCamera());
+        bool isScreenVisible = Utils.IsVisibleFromCamera(_screen, PlayerUtils.GetLocalPlayerCamera());
 
         if (inRange && isScreenVisible)
         {
@@ -134,6 +134,19 @@ public class DoorPortal : MonoBehaviour
 
             OnLocalPlayerExitRange();
         }
+    }
+
+    private bool IsLocalPlayerCameraInRange()
+    {
+        if (!PlayerUtils.TryGetLocalPlayerCamera(out Camera playerCamera))
+            return false;
+
+        float range = ConfigManager.Portal_ActivationRange.Value;
+
+        Vector3 cameraPosition = playerCamera.transform.position;
+        float distance = Vector3.Distance(cameraPosition, transform.position);
+
+        return distance <= range;
     }
 
     private void OnLocalPlayerEnterRange()
@@ -375,15 +388,17 @@ public class DoorPortal : MonoBehaviour
 
     private void CreateViewTexture()
     {
+        Size targetScreenSize = PlayerUtils.GetCameraRenderTextureSize();
+
         bool CanCreate()
         {
             if (_viewTexture == null)
                 return true;
 
-            if (_viewTexture.width != Screen.width)
+            if (_viewTexture.width != targetScreenSize.Width)
                 return true;
 
-            if (_viewTexture.height != Screen.height)
+            if (_viewTexture.height != targetScreenSize.Height)
                 return true;
 
             return false;
@@ -393,7 +408,9 @@ public class DoorPortal : MonoBehaviour
             return;
 
         _viewTexture?.Release();
-        _viewTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.DefaultHDR);
+        _viewTexture = new RenderTexture(targetScreenSize.Width, targetScreenSize.Height, 24, RenderTextureFormat.DefaultHDR);
+
+        Logger.LogInfo($"[{nameof(DoorPortal)}] {nameof(CreateViewTexture)}() width: {targetScreenSize.Width}, height: {targetScreenSize.Height}", extended: true);
 
         _portalCamera.targetTexture = _viewTexture;
 
@@ -432,7 +449,7 @@ public class DoorPortal : MonoBehaviour
         if (!IsRendering())
             return;
 
-        if (!TryGetLocalPlayerCamera(out Camera playerCamera))
+        if (!PlayerUtils.TryGetLocalPlayerCamera(out Camera playerCamera))
             return;
 
         CreateViewTexture(); // Will create a new render texture if the screen size has changed
@@ -499,39 +516,6 @@ public class DoorPortal : MonoBehaviour
             _mainEntrance.SetDoorObjectsEnabled(!IsRendering());
         }
     }
-
-    #region Player Camera
-    private bool IsLocalPlayerCameraInRange()
-    {
-        if (!TryGetLocalPlayerCamera(out Camera playerCamera))
-            return false;
-
-        float range = ConfigManager.Portal_ActivationRange.Value;
-
-        Vector3 cameraPosition = playerCamera.transform.position;
-        float distance = Vector3.Distance(cameraPosition, transform.position);
-
-        return distance <= range;
-    }
-
-    private static Camera GetLocalPlayerCamera()
-    {
-        PlayerControllerB playerScript = PlayerUtils.LocalPlayerScript;
-
-        if (playerScript == null || playerScript.isPlayerDead)
-        {
-            return StartOfRound.Instance.spectateCamera;
-        }
-
-        return playerScript.gameplayCamera;
-    }
-
-    private static bool TryGetLocalPlayerCamera(out Camera camera)
-    {
-        camera = GetLocalPlayerCamera();
-        return camera != null;
-    }
-    #endregion
 
     private void ApplyConfigSettings()
     {
