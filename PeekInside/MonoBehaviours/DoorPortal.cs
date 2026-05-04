@@ -12,6 +12,8 @@ namespace com.github.zehsteam.PeekInside.MonoBehaviours;
 
 public class DoorPortal : MonoBehaviour
 {
+    private static readonly List<DoorPortal> _instances = [];
+
     #region Unity Editor
     [SerializeField]
     private MeshRenderer _screen;
@@ -56,6 +58,19 @@ public class DoorPortal : MonoBehaviour
 
         SetDrawing(false);
         SetRendering(false);
+    }
+
+    private void OnEnable()
+    {
+        if (!_instances.Contains(this))
+        {
+            _instances.Add(this);
+        }
+    }
+
+    private void OnDisable()
+    {
+        _instances.Remove(this);
     }
 
     private void Update()
@@ -118,7 +133,7 @@ public class DoorPortal : MonoBehaviour
         }
 
         bool inRange = IsLocalPlayerCameraInRange();
-        bool isScreenVisible = Utils.IsVisibleFromCamera(_screen, PlayerUtils.GetLocalPlayerCamera());
+        bool isScreenVisible = CameraHelper.IsVisibleFromCamera(_screen, PlayerUtils.GetLocalPlayerCamera());
 
         if (inRange && isScreenVisible)
         {
@@ -524,7 +539,9 @@ public class DoorPortal : MonoBehaviour
 
     public static void OnConfigSettingsChanged()
     {
-        EntranceManager.OutsideMainEntrance?.DoorPortal?.ApplyConfigSettings();
-        EntranceManager.InsideMainEntrance?.DoorPortal?.ApplyConfigSettings();
+        foreach (var instance in _instances)
+        {
+            instance.ApplyConfigSettings();
+        }
     }
 }
