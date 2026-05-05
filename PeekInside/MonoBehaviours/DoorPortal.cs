@@ -55,12 +55,10 @@ public class DoorPortal : MonoBehaviour
     private bool _isInRange;
 
     private LayerMask _pivotRaycastMask;
-    private LayerMask _volumeLayer;
 
     private void Awake()
     {
         _pivotRaycastMask = LayerMask.GetMask("Room");
-        _volumeLayer = LayerMask.NameToLayer("NavigationSurface");
 
         CreateViewTexture();
 
@@ -247,12 +245,17 @@ public class DoorPortal : MonoBehaviour
         Volume[] volumes = [.. FindObjectsByType<Volume>(FindObjectsSortMode.None)
             .Where(x => x.isGlobal && x.gameObject.layer == 0)];
 
+        if (volumes.Length == 0)
+            return;
+
+        LayerMask volumeLayer = LayerMask.NameToLayer("NavigationSurface");
+
         foreach (var volume in volumes)
         {
             GameObject obj = Instantiate(volume.gameObject, _volumeContainer);
             obj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
-            obj.layer = _volumeLayer;
+            obj.layer = volumeLayer;
 
             BoxCollider boxCollider = obj.AddComponent<BoxCollider>();
             boxCollider.size = Vector3.one * 0.1f;
