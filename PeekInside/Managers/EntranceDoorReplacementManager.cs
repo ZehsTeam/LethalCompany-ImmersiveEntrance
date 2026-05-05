@@ -1,13 +1,15 @@
 ﻿using com.github.zehsteam.PeekInside.Extensions;
 using com.github.zehsteam.PeekInside.Helpers;
+using com.github.zehsteam.PeekInside.MonoBehaviours;
 using com.github.zehsteam.PeekInside.Objects;
+using System.Collections;
 using UnityEngine;
 
 namespace com.github.zehsteam.PeekInside.Managers;
 
 internal static class EntranceDoorReplacementManager
 {
-    public static bool IsMansionEntranceDoorReplacementEnabled => true;
+    public static bool IsMansionReplaceInteriorMainEntranceDoorsEnabled => ConfigManager.Mansion_ReplaceInteriorMainEntranceDoors.Value;
 
     public static void ReplaceDoor(EntranceTeleport entranceTeleport)
     {
@@ -22,7 +24,7 @@ internal static class EntranceDoorReplacementManager
 
         InteriorType currentInteriorType = InteriorHelper.GetCurrentInteriorType();
 
-        if (currentInteriorType == InteriorType.Mansion && IsMansionEntranceDoorReplacementEnabled)
+        if (currentInteriorType == InteriorType.Mansion && IsMansionReplaceInteriorMainEntranceDoorsEnabled)
         {
             ReplaceDoor(entranceTeleport, Assets.MansionEntranceDoorReplacement);
         }
@@ -59,9 +61,26 @@ internal static class EntranceDoorReplacementManager
         GameObject gameObject = Object.Instantiate(prefab, parent);
         gameObject.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
-        if (parent.TryGetComponent(out MeshRenderer meshRenderer))
+        HideAfterDelay(parent.gameObject);
+    }
+
+    private static void HideAfterDelay(GameObject gameObject, float delay = 0.1f)
+    {
+        IEnumerator Coroutine()
         {
-            meshRenderer.enabled = false;
+            yield return new WaitForSeconds(delay);
+
+            if (gameObject.TryGetComponent(out MeshFilter meshFilter))
+            {
+                meshFilter.mesh = null;
+            }
+
+            if (gameObject.TryGetComponent(out Renderer renderer))
+            {
+                renderer.enabled = false;
+            }
         }
+
+        CoroutineRunner.Start(Coroutine());
     }
 }
