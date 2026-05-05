@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using com.github.zehsteam.PeekInside.Objects;
+using System.IO;
 using System.Reflection;
 using UnityEngine;
 
@@ -13,6 +14,9 @@ internal static class Assets
     // Prefabs
     public static GameObject DoorPortalPrefab { get; private set; }
 
+    // EntranceDoorReplacements
+    public static EntranceDoorReplacement MansionEntranceDoorReplacement { get; private set; }
+    
     public static void Load()
     {
         string pluginFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -41,6 +45,9 @@ internal static class Assets
     {
         // Prefabs
         DoorPortalPrefab = LoadAsset<GameObject>("DoorPortal", assetBundle);
+
+        // EntranceDoorReplacements
+        MansionEntranceDoorReplacement = LoadAsset<EntranceDoorReplacement>("MansionEntranceDoorReplacement", assetBundle);
     }
 
     private static T LoadAsset<T>(string name, AssetBundle assetBundle) where T : Object

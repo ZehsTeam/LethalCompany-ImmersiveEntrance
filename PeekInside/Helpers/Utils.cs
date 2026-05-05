@@ -3,7 +3,6 @@ using BepInEx.Configuration;
 using System.IO;
 using UnityEngine;
 using Random = UnityEngine.Random;
-using Object = UnityEngine.Object;
 
 namespace com.github.zehsteam.PeekInside.Helpers;
 

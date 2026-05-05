@@ -72,7 +72,7 @@ internal static class InteriorHelper
         return doorObjects;
     }
 
-    private static Transform GetVisualDoorsContainer(EntranceTeleport entranceTeleport)
+    public static Transform GetVisualDoorsContainer(EntranceTeleport entranceTeleport)
     {
         if (entranceTeleport.thisEntranceAnimator != null)
         {
@@ -82,7 +82,7 @@ internal static class InteriorHelper
         return GameObject.FindGameObjectWithTag("InsideEntranceDoor")?.transform ?? null;
     }
 
-    private static bool TryGetVisualDoorsContainer(EntranceTeleport entranceTeleport, out Transform transform)
+    public static bool TryGetVisualDoorsContainer(EntranceTeleport entranceTeleport, out Transform transform)
     {
         transform = GetVisualDoorsContainer(entranceTeleport);
         return transform != null;

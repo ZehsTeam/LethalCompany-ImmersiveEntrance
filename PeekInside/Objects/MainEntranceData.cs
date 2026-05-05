@@ -31,9 +31,12 @@ public class MainEntranceData
         if (DoorObjects == null || DoorObjects.Count == 0)
             return;
 
-        foreach (var item in DoorObjects)
+        foreach (var gameObject in DoorObjects)
         {
-            item.SetActive(value);
+            if (gameObject == null)
+                continue;
+
+            gameObject.SetActive(value);
         }
     }
 }

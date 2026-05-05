@@ -1,6 +1,5 @@
 ﻿using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.Managers;
-using com.github.zehsteam.PeekInside.MonoBehaviours;
 using HarmonyLib;
 
 namespace com.github.zehsteam.PeekInside.Patches;
