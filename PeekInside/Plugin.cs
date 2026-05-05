@@ -30,7 +30,5 @@ internal class Plugin : BaseUnityPlugin
         Assets.Load();
 
         ConfigManager.Initialize(Config);
-
-        //NetworkUtils.NetcodePatcherAwake();
     }
 }

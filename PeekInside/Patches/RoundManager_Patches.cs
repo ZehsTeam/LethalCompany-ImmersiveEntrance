@@ -26,6 +26,5 @@ internal static class RoundManager_Patches
         _initialized = true;
 
         EntranceManager.LinkMainEntrancePortals();
-        FacilitySunBlocker.Spawn();
     }
 }

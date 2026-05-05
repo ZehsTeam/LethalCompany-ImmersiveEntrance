@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.PeekInside.MonoBehaviours;
@@ -14,7 +15,12 @@ public class DoorPortal : MonoBehaviour
 {
     private static readonly List<DoorPortal> _instances = [];
 
+    public Camera PortalCamera => _portalCamera;
+
     #region Unity Editor
+    [SerializeField]
+    private Transform _pivot;
+
     [SerializeField]
     private MeshRenderer _screen;
 
@@ -22,16 +28,16 @@ public class DoorPortal : MonoBehaviour
     private MeshRenderer _screenOccluder;
 
     [SerializeField]
-    private Camera _portalCamera;
-
-    [SerializeField]
-    private Transform _pivot;
-
-    [SerializeField]
     private GameObject _renderingContainer;
 
     [SerializeField]
+    private Camera _portalCamera;
+
+    [SerializeField]
     private Light _nightVision;
+
+    [SerializeField]
+    private Transform _volumeContainer;
 
     [Space(10f)]
     [SerializeField]
@@ -49,10 +55,12 @@ public class DoorPortal : MonoBehaviour
     private bool _isInRange;
 
     private LayerMask _pivotRaycastMask;
+    private LayerMask _volumeLayer;
 
     private void Awake()
     {
         _pivotRaycastMask = LayerMask.GetMask("Room");
+        _volumeLayer = LayerMask.NameToLayer("NavigationSurface");
 
         CreateViewTexture();
 
@@ -71,6 +79,11 @@ public class DoorPortal : MonoBehaviour
     private void OnDisable()
     {
         _instances.Remove(this);
+    }
+
+    private void Start()
+    {
+        InitializeVolumes();
     }
 
     private void Update()
@@ -92,7 +105,7 @@ public class DoorPortal : MonoBehaviour
     public void SetMainEntranceData(MainEntranceData mainEntrance)
     {
         _mainEntrance = mainEntrance;
-
+        
         HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
 
         if (_mainEntrance.IsOutside)
@@ -215,6 +228,38 @@ public class DoorPortal : MonoBehaviour
     {
         interiorSettings = GetInteriorSettings();
         return interiorSettings != null;
+    }
+    #endregion
+
+    #region Volumes
+    private void InitializeVolumes()
+    {
+        CreateVolumesFromScene();
+    }
+
+    private void CreateVolumesFromScene()
+    {
+        foreach (var child in _volumeContainer.GetChildren())
+        {
+            Destroy(child.gameObject);
+        }
+
+        Volume[] volumes = [.. FindObjectsByType<Volume>(FindObjectsSortMode.None)
+            .Where(x => x.isGlobal && x.gameObject.layer == 0)];
+
+        foreach (var volume in volumes)
+        {
+            GameObject obj = Instantiate(volume.gameObject, _volumeContainer);
+            obj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+            obj.layer = _volumeLayer;
+
+            BoxCollider boxCollider = obj.AddComponent<BoxCollider>();
+            boxCollider.size = Vector3.one * 0.1f;
+
+            Volume newVolume = obj.GetComponent<Volume>();
+            newVolume.isGlobal = false;
+        }
     }
     #endregion
 
@@ -384,13 +429,15 @@ public class DoorPortal : MonoBehaviour
 
         if (_mainEntrance.IsOutside)
         {
+            float outsideViewRange = ConfigManager.Portal_OutsideViewRange.Value;
+
             if (TryGetMoonSettings(out DoorPortalMoonSettings moonSettings) && moonSettings.UseViewRange)
             {
-                farClipPlane = moonSettings.ViewRange;
+                farClipPlane = Mathf.Min(moonSettings.ViewRange, outsideViewRange);
             }
             else
             {
-                farClipPlane = ConfigManager.Portal_OutsideViewRange.Value;
+                farClipPlane = outsideViewRange;
             }
         }
         else
@@ -500,6 +547,12 @@ public class DoorPortal : MonoBehaviour
         Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
 
         _portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+    }
+
+    public static bool TryGetRenderingInstance(out DoorPortal doorPortal)
+    {
+        doorPortal = _instances.FirstOrDefault(x => x.IsRendering());
+        return doorPortal != null;
     }
     #endregion
 

@@ -1,4 +1,5 @@
 ﻿using com.github.zehsteam.PeekInside.Helpers;
+using com.github.zehsteam.PeekInside.MonoBehaviours;
 using GameNetcodeStuff;
 using HarmonyLib;
 
@@ -9,11 +10,22 @@ internal static class MatchLocalPlayerPosition_Patches
 {
     [HarmonyPatch(nameof(MatchLocalPlayerPosition.LateUpdate))]
     [HarmonyPrefix]
-    private static bool LateUpdate_Patch()
+    private static bool LateUpdate_Patch(MatchLocalPlayerPosition __instance)
     {
         if (!PlayerUtils.TryGetLocalPlayerScript(out PlayerControllerB playerScript))
             return true;
 
-        return !playerScript.isInsideFactory;
+        if (!playerScript.isInsideFactory) // Default behaviour
+            return true;
+
+        if (DoorPortal.TryGetRenderingInstance(out DoorPortal doorPortal))
+        {
+            // Follow the rendering portal camera
+            __instance.transform.position = doorPortal.PortalCamera.transform.position;
+            return false;
+        }
+
+        // Do nothing
+        return false;
     }
 }

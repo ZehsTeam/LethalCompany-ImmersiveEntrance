@@ -12,7 +12,6 @@ internal static class Assets
 
     // Prefabs
     public static GameObject DoorPortalPrefab { get; private set; }
-    public static GameObject FacilitySunBlockerPrefab { get; private set; }
 
     public static void Load()
     {
@@ -42,7 +41,6 @@ internal static class Assets
     {
         // Prefabs
         DoorPortalPrefab = LoadAsset<GameObject>("DoorPortal", assetBundle);
-        FacilitySunBlockerPrefab = LoadAsset<GameObject>("FacilitySunBlocker", assetBundle);
     }
 
     private static T LoadAsset<T>(string name, AssetBundle assetBundle) where T : Object

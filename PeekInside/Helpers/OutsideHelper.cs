@@ -64,6 +64,12 @@ internal static class OutsideHelper
             return result;
         }
 
+        // Artifice
+        if (GameObjectHelper.TryFind("Environment/MainFactory/Plane", out result))
+        {
+            return result;
+        }
+
         return null;
     }
 
@@ -88,6 +94,12 @@ internal static class OutsideHelper
         }
 
         if (GameObjectHelper.TryFind("Environment/DoorFrame (1)", out GameObject result))
+        {
+            doorObjects.Add(result);
+        }
+
+        // Artifice
+        if (GameObjectHelper.TryFind("Environment/MainFactory/DoorFrame (1)", out result))
         {
             doorObjects.Add(result);
         }
