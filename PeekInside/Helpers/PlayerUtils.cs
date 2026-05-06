@@ -128,7 +128,7 @@ internal static class PlayerUtils
         return camera != null;
     }
 
-    public static bool IsLocalPlayerCameraInsideFactory()
+    public static bool IsLocalPlayerCameraInsideInterior()
     {
         if (!TryGetLocalPlayerScript(out PlayerControllerB playerScript))
             return false;

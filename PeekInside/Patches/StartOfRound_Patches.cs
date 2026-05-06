@@ -1,5 +1,4 @@
-﻿using com.github.zehsteam.PeekInside.Helpers;
-using com.github.zehsteam.PeekInside.Managers;
+﻿using com.github.zehsteam.PeekInside.Managers;
 using HarmonyLib;
 
 namespace com.github.zehsteam.PeekInside.Patches;
@@ -20,7 +19,6 @@ internal static class StartOfRound_Patches
     private static void EndOfGame_Patch()
     {
         EntranceManager.Reset();
-        OutsideHelper.Reset();
     }
 
     [HarmonyPatch(nameof(StartOfRound.OnLocalDisconnect))]
@@ -28,6 +26,5 @@ internal static class StartOfRound_Patches
     private static void OnLocalDisconnect_Patch()
     {
         EntranceManager.Reset();
-        OutsideHelper.Reset();
     }
 }

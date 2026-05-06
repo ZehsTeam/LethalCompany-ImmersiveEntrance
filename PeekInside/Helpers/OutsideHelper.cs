@@ -9,13 +9,6 @@ namespace com.github.zehsteam.PeekInside.Helpers;
 
 internal static class OutsideHelper
 {
-    public static bool IsOverridingSun { get; private set; }
-
-    public static void Reset()
-    {
-        IsOverridingSun = false;
-    }
-
     public static void SetSunEnabled(bool value)
     {
         TimeOfDay timeOfDay = TimeOfDay.Instance;
@@ -23,14 +16,12 @@ internal static class OutsideHelper
         if (timeOfDay == null)
             return;
 
-        IsOverridingSun = value;
-
         timeOfDay.sunDirect?.enabled = value;
         timeOfDay.sunIndirect?.enabled = value;
         timeOfDay.indirectLightData?.lightDimmer = value ? 1f : 0f;
     }
 
-
+    
 
     public static GameObject GetDoorViewBlocker(EntranceTeleport entranceTeleport)
     {

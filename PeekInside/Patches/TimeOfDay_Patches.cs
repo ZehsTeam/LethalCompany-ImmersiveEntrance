@@ -7,9 +7,10 @@ namespace com.github.zehsteam.PeekInside.Patches;
 internal static class TimeOfDay_Patches
 {
     [HarmonyPatch(nameof(TimeOfDay.SetInsideLightingDimness))]
-    [HarmonyPrefix]
-    private static bool SetInsideLightingDimness_Patch()
+    [HarmonyPostfix]
+    private static void SetInsideLightingDimness_Patch(TimeOfDay __instance)
     {
-        return !OutsideHelper.IsOverridingSun;
+        float value = PlayerUtils.IsLocalPlayerCameraInsideInterior() ? 0f : 1f;
+        __instance.indirectLightData.lightDimmer = value;
     }
 }

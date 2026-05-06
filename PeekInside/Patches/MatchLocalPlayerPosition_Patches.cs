@@ -1,6 +1,5 @@
 ﻿using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.MonoBehaviours;
-using GameNetcodeStuff;
 using HarmonyLib;
 
 namespace com.github.zehsteam.PeekInside.Patches;
@@ -12,10 +11,7 @@ internal static class MatchLocalPlayerPosition_Patches
     [HarmonyPrefix]
     private static bool LateUpdate_Patch(MatchLocalPlayerPosition __instance)
     {
-        if (!PlayerUtils.TryGetLocalPlayerScript(out PlayerControllerB playerScript))
-            return true;
-
-        if (!playerScript.isInsideFactory) // Default behaviour
+        if (!PlayerUtils.IsLocalPlayerCameraInsideInterior()) // Default behaviour
             return true;
 
         if (DoorPortal.TryGetRenderingInstance(out DoorPortal doorPortal))

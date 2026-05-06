@@ -121,13 +121,26 @@ public class DoorPortal : MonoBehaviour
         Logger.LogInfo($"[{nameof(DoorPortal)}] Linked portal {_mainEntrance.EntranceTeleport.GetLogInfo()} -> {other._mainEntrance.EntranceTeleport.GetLogInfo()}");
     }
 
+    public bool IsEnabled()
+    {
+        if (!ConfigManager.Portal_Enabled.Value)
+            return false;
+
+        if (_portalSettings == null || _linkedPortal == null)
+            return false;
+
+        if (!_portalSettings.Enabled.Value)
+            return false;
+
+        if (!_linkedPortal._portalSettings.Enabled.Value)
+            return false;
+
+        return true;
+    }
+
     private void UpdateScreenVisibility()
     {
-        bool enabled = ConfigManager.Portal_Enabled.Value
-            && _portalSettings.Enabled.Value
-            && _linkedPortal._portalSettings.Enabled.Value;
-
-        if (!enabled)
+        if (!IsEnabled())
         {
             _isInRange = false;
             OnLocalPlayerExitRange();
@@ -177,7 +190,7 @@ public class DoorPortal : MonoBehaviour
         }
         else
         {
-            OutsideHelper.SetSunEnabled(true);
+            //OutsideHelper.SetSunEnabled(true);
         }
     }
 
@@ -192,7 +205,7 @@ public class DoorPortal : MonoBehaviour
         }
         else
         {
-            OutsideHelper.SetSunEnabled(false);
+            //OutsideHelper.SetSunEnabled(false);
         }
     }
 
@@ -497,7 +510,11 @@ public class DoorPortal : MonoBehaviour
 
         SetObliqueNearClipPlane(playerCamera);
 
+        OutsideHelper.SetSunEnabled(_mainEntrance.IsOutside);
+
         _portalCamera.Render();
+
+        OutsideHelper.SetSunEnabled(!_mainEntrance.IsOutside);
     }
 
     private void SetObliqueNearClipPlane(Camera playerCamera)
