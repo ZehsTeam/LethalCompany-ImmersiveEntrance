@@ -176,18 +176,6 @@
     <PluginFolder>$(BepInExPluginsFolder)\$(ThunderstoreTeamName)-$(MSBuildProjectName)</PluginFolder>
   </PropertyGroup>
   
-  <!-- NetcodePatch -->
-  <!--<PropertyGroup>
-    <NPUnityVersion>2022.3.62</NPUnityVersion>
-    <NPNetcodeVersion>1.12.2</NPNetcodeVersion>
-    <NPTransportVersion>1.0.0</NPTransportVersion>
-  </PropertyGroup>
-  
-  <Target Name="NetcodePatch" AfterTargets="PostBuildEvent">
-    <Message Text="Running NetcodePatch for Unity version $(NPUnityVersion), Netcode version $(NPNetcodeVersion), Transport version $(NPTransportVersion)" Importance="high" />
-    <Exec Command="netcode-patch -uv $(NPUnityVersion) -nv $(NPNetcodeVersion) -tv $(NPTransportVersion) &quot;$(TargetPath)&quot; @(ReferencePathWithRefAssemblies->'&quot;%(Identity)&quot;', ' ')" />
-  </Target>-->
-  
   <!-- Copy files to Gale plugin folder -->
   <Target Name="CopyToGalePluginFolder" AfterTargets="PostBuildEvent">
     <Message Text="Copying to Gale plugin folder" Importance="high" />
