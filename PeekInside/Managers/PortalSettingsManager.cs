@@ -26,7 +26,7 @@ internal static class PortalSettingsManager
         _predefinedMoonEntries.Add(new MoonPortalSettings(
             planetName: "85 Rend",
             new PortalSettings.DefaultValues(
-                viewRange: 75f
+                viewDistance: 75f
             )
         ));
 
@@ -56,7 +56,7 @@ internal static class PortalSettingsManager
             new InteriorPortalSettings.InteriorDefaultValues(),
             new PortalSettings.DefaultValues(
                 pivotPositionOffset: new Vector3(-0.105f, 0f, 0f),
-                viewRange: 30f
+                viewDistance: 30f
             )
         ));
     }
@@ -137,15 +137,18 @@ internal static class PortalSettingsManager
             return;
         }
 
+        var interiorDefaultValues = new InteriorPortalSettings.InteriorDefaultValues();
+        var defaultValues = new PortalSettings.DefaultValues();
+
         InteriorType interiorType = InteriorHelper.GetInteriorType(dungeonFlow);
 
         if (interiorType == InteriorType.Unknown)
         {
-            _interiorEntries.Add(new InteriorPortalSettings(dungeonFlow.name, new InteriorPortalSettings.InteriorDefaultValues(), new PortalSettings.DefaultValues()));
+            _interiorEntries.Add(new InteriorPortalSettings(dungeonFlow.name, interiorDefaultValues, defaultValues));
             return;
         }
 
-        _interiorEntries.Add(new InteriorPortalSettings(interiorType, new InteriorPortalSettings.InteriorDefaultValues(), new PortalSettings.DefaultValues()));
+        _interiorEntries.Add(new InteriorPortalSettings(interiorType, interiorDefaultValues, defaultValues));
     }
     #endregion
 

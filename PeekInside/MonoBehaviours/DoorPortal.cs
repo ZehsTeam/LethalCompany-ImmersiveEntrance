@@ -397,35 +397,50 @@ public class DoorPortal : MonoBehaviour
         CreateViewTexture();
     }
 
-    private void ApplyCameraViewRange()
+    private void ApplyCameraViewDistance()
     {
         if (_mainEntrance == null)
             return;
 
         float farClipPlane;
 
-        if (_portalSettings.OverrideViewRange.Value)
+        if (_portalSettings.UseViewDistance.Value)
         {
-            farClipPlane = _portalSettings.ViewRange.Value;
+            farClipPlane = _portalSettings.ViewDistance.Value;
         }
         else
         {
             if (_mainEntrance.IsOutside)
             {
-                farClipPlane = ConfigManager.Portal_OutsideViewRange.Value;
+                farClipPlane = ConfigManager.Portal_OutsideViewDistance.Value;
             }
             else
             {
-                farClipPlane = ConfigManager.Portal_InsideViewRange.Value;
+                farClipPlane = ConfigManager.Portal_InsideViewDistance.Value;
             }
         }
 
         _portalCamera.farClipPlane = farClipPlane;
     }
 
+    private Size GetTargetScreenSize()
+    {
+        PixelResolutionType pixelResolution = ConfigManager.Portal_PixelResolution.Value;
+
+        return pixelResolution switch
+        {
+            PixelResolutionType.PlayerCamera => CameraHelper.GetCameraScreenSize(),
+            PixelResolutionType.Default =>          new Size(860, 520),
+            PixelResolutionType.Performance =>      new Size(620, 364),
+            PixelResolutionType.UltraPerformance => new Size(400, 260),
+            PixelResolutionType.Retro =>            new Size(186, 104),
+            _ => CameraHelper.GetCameraScreenSize(),
+        };
+    }
+
     private void CreateViewTexture()
     {
-        Size targetScreenSize = PlayerUtils.GetCameraRenderTextureSize();
+        Size targetScreenSize = GetTargetScreenSize();
 
         bool CanCreate()
         {
@@ -468,7 +483,7 @@ public class DoorPortal : MonoBehaviour
 
         if (value)
         {
-            ApplyCameraViewRange();
+            ApplyCameraViewDistance();
         }
 
         UpdateNightVision();
@@ -574,7 +589,7 @@ public class DoorPortal : MonoBehaviour
     #region Config
     private void ApplyConfigSettings()
     {
-        ApplyCameraViewRange();
+        ApplyCameraViewDistance();
     }
 
     public static void OnConfigSettingsChanged()

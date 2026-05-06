@@ -1,11 +1,10 @@
 ﻿namespace com.github.zehsteam.PeekInside.Objects;
 
-internal enum PixelResolution
+internal enum PixelResolutionType
 {
-    PlayerCamera = -1,
+    PlayerCamera,
     Default,
     Performance,
     UltraPerformance,
     Retro,
-    Custom
 }

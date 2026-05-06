@@ -145,22 +145,4 @@ internal static class PlayerUtils
 
         return false;
     }
-
-    // TODO: Add config resolution size to this
-    public static Size GetCameraRenderTextureSize()
-    {
-        if (TryGetLocalPlayerCamera(out Camera camera))
-        {
-            return new Size(camera.pixelWidth, camera.pixelHeight);
-        }
-
-        IngamePlayerSettings playerSettings = IngamePlayerSettings.Instance;
-
-        if (playerSettings != null && playerSettings.playerGameplayScreenTex != null)
-        {
-            return new Size(playerSettings.playerGameplayScreenTex.width, playerSettings.playerGameplayScreenTex.height);
-        }
-
-        return new Size(860, 520);
-    }
 }
