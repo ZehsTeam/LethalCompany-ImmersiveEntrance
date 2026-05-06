@@ -1,4 +1,5 @@
-﻿using com.github.zehsteam.PeekInside.Managers;
+﻿using com.github.zehsteam.PeekInside.Helpers;
+using com.github.zehsteam.PeekInside.Managers;
 using HarmonyLib;
 
 namespace com.github.zehsteam.PeekInside.Patches;
@@ -10,7 +11,10 @@ internal static class EntranceTeleport_Patches
     [HarmonyPostfix]
     private static void Awake_Patch(EntranceTeleport __instance)
     {
-        EntranceDoorReplacementManager.ReplaceDoor(__instance);
-        EntranceManager.SpawnDoorPortal(__instance);
+        Utils.ExecuteAfterDelay(() =>
+        {
+            EntranceDoorReplacementManager.ReplaceDoor(__instance);
+            EntranceManager.SpawnDoorPortal(__instance);
+        }, 0.1f);
     }
 }
