@@ -54,6 +54,8 @@ public class DoorPortal : MonoBehaviour
     {
         _pivotRaycastMask = LayerMask.GetMask("Room");
 
+        _portalCamera.enabled = false;
+
         SetDrawing(false);
         SetRendering(false);
     }
@@ -70,7 +72,7 @@ public class DoorPortal : MonoBehaviour
     {
         _instances.Remove(this);
     }
-
+    
     private void Start()
     {
         InitializeVolumes();
@@ -494,6 +496,8 @@ public class DoorPortal : MonoBehaviour
         );
 
         SetObliqueNearClipPlane(playerCamera);
+
+        _portalCamera.Render();
     }
 
     private void SetObliqueNearClipPlane(Camera playerCamera)
@@ -550,6 +554,7 @@ public class DoorPortal : MonoBehaviour
         }
     }
 
+    #region Config
     private void ApplyConfigSettings()
     {
         ApplyCameraViewRange();
@@ -562,4 +567,5 @@ public class DoorPortal : MonoBehaviour
             instance.ApplyConfigSettings();
         }
     }
+    #endregion
 }
