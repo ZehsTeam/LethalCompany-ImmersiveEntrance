@@ -76,6 +76,7 @@ public class DoorPortal : MonoBehaviour
     private void Start()
     {
         InitializeVolumes();
+        InitializePivot();
     }
 
     private void Update()
@@ -106,8 +107,7 @@ public class DoorPortal : MonoBehaviour
         {
             _portalSettings = PortalSettingsManager.GetCurrentInteriorSettings();
         }
-
-        InitializePivot();
+        
         InitializeScreen();
         InitializeCamera();
     }

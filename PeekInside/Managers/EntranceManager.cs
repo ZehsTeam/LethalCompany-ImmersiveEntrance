@@ -2,6 +2,7 @@
 using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.MonoBehaviours;
 using com.github.zehsteam.PeekInside.Objects;
+using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -9,8 +10,11 @@ namespace com.github.zehsteam.PeekInside.Managers;
 
 internal static class EntranceManager
 {
-    public static MainEntranceData OutsideMainEntrance { get; private set; } = new();
-    public static MainEntranceData InsideMainEntrance { get; private set; } = new();
+    public static IReadOnlyDictionary<EntranceTeleport, DoorPortal> EntranceToPortals => _entranceToPortals;
+    private static readonly Dictionary<EntranceTeleport, DoorPortal> _entranceToPortals = [];
+
+    public static MainEntranceData OutsideMainEntrance { get; private set; }
+    public static MainEntranceData InsideMainEntrance { get; private set; }
 
     private static bool _linkedMainEntrancePortals;
 
@@ -20,6 +24,18 @@ internal static class EntranceManager
         InsideMainEntrance.Reset();
 
         _linkedMainEntrancePortals = false;
+
+        foreach (var kvp in _entranceToPortals)
+        {
+            DoorPortal doorPortal = kvp.Value;
+            if (doorPortal == null) continue;
+
+            Object.Destroy(doorPortal.gameObject);
+
+            Logger.LogInfo($"[{nameof(EntranceManager)}] Reset() Destroyed DoorPortal {kvp.Key?.GetLogInfo()}", extended: true);
+        }
+
+        _entranceToPortals.Clear();
     }
 
     public static void SpawnDoorPortal(EntranceTeleport entranceTeleport)
@@ -31,6 +47,18 @@ internal static class EntranceManager
             return;
 
         Logger.LogInfo($"[{nameof(EntranceManager)}] Attempting to spawn main entrance door portal! {entranceTeleport.GetLogInfo()}");
+
+        if (_entranceToPortals.ContainsKey(entranceTeleport))
+        {
+            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to spawn main entrance door portal. This EntranceTeleport is already in use!");
+            return;
+        }
+
+        if (_entranceToPortals.Count >= 2)
+        {
+            Logger.LogError($"[{nameof(EntranceManager)}] Failed to spawn main entrance door portal. There are already {_entranceToPortals.Count} entrance portals.");
+            return;
+        }
 
         MainEntranceData mainEntrance;
 
@@ -59,16 +87,21 @@ internal static class EntranceManager
         }
         else
         {
-            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to find main entrance door view blocker. {entranceTeleport.GetLogInfo()}");
+            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to spawn main entrance door portal. Could not find main entrance door view blocker. {entranceTeleport.GetLogInfo()}");
+            mainEntrance?.Reset();
+            return;
         }
 
-        Vector3 position = entranceTeleport.transform.position;
-        Quaternion rotation = entranceTeleport.transform.rotation;
+        GameObject gameObject = Object.Instantiate(Assets.DoorPortalPrefab, entranceTeleport.transform);
+        gameObject.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+        Vector3 scale = Assets.DoorPortalPrefab.transform.localScale;
+        gameObject.transform.SetLossyScale(scale);
 
-        GameObject gameObject = Object.Instantiate(Assets.DoorPortalPrefab, position, rotation);
         DoorPortal doorPortal = gameObject.GetComponent<DoorPortal>();
 
         mainEntrance.DoorPortal = doorPortal;
+
+        _entranceToPortals.Add(entranceTeleport, doorPortal);
 
         doorPortal.SetMainEntranceData(mainEntrance);
 
@@ -81,6 +114,7 @@ internal static class EntranceManager
         _linkedMainEntrancePortals = true;
 
         Logger.LogInfo($"[{nameof(EntranceManager)}] Attempting to link main entrance portals.");
+        Logger.LogInfo($"[{nameof(EntranceManager)}] There are {_entranceToPortals.Count} entrance portals.", extended: true);
 
         bool success = true;
 

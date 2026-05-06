@@ -13,10 +13,7 @@ internal static class RoundManager_Patches
     {
         if (!NetworkUtils.IsExecutingRPCMethod(__instance))
             return;
-        
-        Utils.ExecuteAfterDelay(() =>
-        {
-            EntranceManager.LinkMainEntrancePortals();
-        }, 0.1f);
+
+        EntranceManager.LinkMainEntrancePortals();
     }
 }

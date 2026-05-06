@@ -27,5 +27,25 @@ internal static class TransformExtensions
         }
 
         return list;
-    }   
+    }
+
+    public static void SetLossyScale(this Transform transform, Vector3 scale)
+    {
+        if (transform == null)
+            return;
+
+        if (transform.parent == null)
+        {
+            transform.localScale = scale;
+            return;
+        }
+
+        Vector3 parentLossyScale = transform.parent.lossyScale;
+
+        transform.localScale = new Vector3(
+            parentLossyScale.x != 0 ? scale.x / parentLossyScale.x : scale.x,
+            parentLossyScale.y != 0 ? scale.y / parentLossyScale.y : scale.y,
+            parentLossyScale.z != 0 ? scale.z / parentLossyScale.z : scale.z
+        );
+    }
 }

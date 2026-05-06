@@ -22,9 +22,13 @@ public class MainEntranceData
     public void Reset()
     {
         EntranceTeleport = null;
-        DoorPortal = null;
         DoorViewBlocker = null;
         DoorObjects.Clear();
+
+        if (DoorPortal != null)
+        {
+            Object.Destroy(DoorPortal);
+        }
     }
 
     public void SetDoorObjectsEnabled(bool value)
