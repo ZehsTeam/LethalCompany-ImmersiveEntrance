@@ -48,9 +48,12 @@ internal static class ConfigManager
         descriptionBuilder.AppendLine("Retro = 186x104.");
 
         Portal_PixelResolution =     ConfigHelper.Bind("Portal", "PixelResolution",     defaultValue: PixelResolutionType.PlayerCamera, descriptionBuilder.ToString());
-        Portal_ActivationRange =     ConfigHelper.Bind("Portal", "ActivationRange",     defaultValue: 10f,  "The distance in meters the player needs to be within a portal for it to render.");
-        Portal_OutsideViewDistance = ConfigHelper.Bind("Portal", "OutsideViewDistance", defaultValue: 250f, "The distance you can see through an outside portal.");
-        Portal_InsideViewDistance =  ConfigHelper.Bind("Portal", "InsideViewDistance",  defaultValue: 50f,  "The distance you can see through an inside portal.");
+        Portal_ActivationRange =     ConfigHelper.Bind("Portal", "ActivationRange",     defaultValue: 10f,  "The distance in meters the player needs to be within a portal for it to render.",
+            acceptableValues: new AcceptableValueRange<float>(1f, 50f));
+        Portal_OutsideViewDistance = ConfigHelper.Bind("Portal", "OutsideViewDistance", defaultValue: 250f, "The distance you can see through an outside portal.",
+            acceptableValues: new AcceptableValueRange<float>(0.06f, 250f));
+        Portal_InsideViewDistance =  ConfigHelper.Bind("Portal", "InsideViewDistance",  defaultValue: 50f,  "The distance you can see through an inside portal.",
+            acceptableValues: new AcceptableValueRange<float>(0.06f, 100f));
 
         Portal_OutsideViewDistance.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
         Portal_InsideViewDistance.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();

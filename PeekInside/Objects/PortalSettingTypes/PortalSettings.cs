@@ -54,7 +54,8 @@ internal abstract class PortalSettings
     {
         Enabled =         ConfigHelper.Bind(ConfigSection, "Enabled",         defaultValue: _defaultValues.Enabled,         $"Enable this portal. If disabled, will also disable the other portal.");
         UseViewDistance = ConfigHelper.Bind(ConfigSection, "UseViewDistance", defaultValue: _defaultValues.UseViewDistance, "If enabled, this portal will use the view distance in this config instead of the global view distance config.");
-        ViewDistance =    ConfigHelper.Bind(ConfigSection, "ViewDistance",    defaultValue: _defaultValues.ViewDistance,    "The distance you can see through this portal. Requires UseViewDistance to be enabled.");
+        ViewDistance =    ConfigHelper.Bind(ConfigSection, "ViewDistance",    defaultValue: _defaultValues.ViewDistance,    "The distance you can see through this portal. Requires UseViewDistance to be enabled.",
+            acceptableValues: new AcceptableValueRange<float>(0.06f, 250f));
 
         UseViewDistance.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
         ViewDistance.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
