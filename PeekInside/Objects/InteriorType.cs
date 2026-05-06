@@ -1,6 +1,6 @@
 ﻿namespace com.github.zehsteam.PeekInside.Objects;
 
-public enum InteriorType
+internal enum InteriorType
 {
     Facility,
     Mansion,

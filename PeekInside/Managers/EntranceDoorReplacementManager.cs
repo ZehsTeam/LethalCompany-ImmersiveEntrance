@@ -2,6 +2,7 @@
 using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.MonoBehaviours;
 using com.github.zehsteam.PeekInside.Objects;
+using com.github.zehsteam.PeekInside.Objects.PortalSettingTypes;
 using System.Collections;
 using UnityEngine;
 
@@ -9,8 +10,6 @@ namespace com.github.zehsteam.PeekInside.Managers;
 
 internal static class EntranceDoorReplacementManager
 {
-    public static bool IsMansionReplaceInteriorMainEntranceDoorsEnabled => ConfigManager.Mansion_ReplaceInteriorMainEntranceDoors.Value;
-
     public static void ReplaceDoor(EntranceTeleport entranceTeleport)
     {
         if (entranceTeleport == null)
@@ -22,11 +21,11 @@ internal static class EntranceDoorReplacementManager
         if (entranceTeleport.IsOutside())
             return;
 
-        InteriorType currentInteriorType = InteriorHelper.GetCurrentInteriorType();
+        InteriorPortalSettings interiorSettings = PortalSettingsManager.GetCurrentInteriorSettings();
 
-        if (currentInteriorType == InteriorType.Mansion && IsMansionReplaceInteriorMainEntranceDoorsEnabled)
+        if (interiorSettings.HasDoorReplacement && interiorSettings.ReplaceDoor.Value)
         {
-            ReplaceDoor(entranceTeleport, Assets.MansionEntranceDoorReplacement);
+            ReplaceDoor(entranceTeleport, interiorSettings.GetDoorReplacement());
         }
     }
 

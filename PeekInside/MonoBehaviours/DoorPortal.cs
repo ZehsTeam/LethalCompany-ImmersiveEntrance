@@ -2,6 +2,7 @@
 using com.github.zehsteam.PeekInside.Helpers;
 using com.github.zehsteam.PeekInside.Managers;
 using com.github.zehsteam.PeekInside.Objects;
+using com.github.zehsteam.PeekInside.Objects.PortalSettingTypes;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -38,29 +39,20 @@ public class DoorPortal : MonoBehaviour
 
     [SerializeField]
     private Transform _volumeContainer;
-
-    [Space(10f)]
-    [SerializeField]
-    private List<DoorPortalMoonSettings> _moonSettingsList = [];
-
-    [Space(10f)]
-    [SerializeField]
-    private List<DoorPortalInteriorSettings> _interiorSettingsList = [];
     #endregion
 
     private MainEntranceData _mainEntrance;
+    private PortalSettings _portalSettings;
     private DoorPortal _linkedPortal;
+    
     private RenderTexture _viewTexture;
     private bool _isDrawing;
     private bool _isInRange;
-
     private LayerMask _pivotRaycastMask;
 
     private void Awake()
     {
         _pivotRaycastMask = LayerMask.GetMask("Room");
-
-        CreateViewTexture();
 
         SetDrawing(false);
         SetRendering(false);
@@ -103,21 +95,19 @@ public class DoorPortal : MonoBehaviour
     public void SetMainEntranceData(MainEntranceData mainEntrance)
     {
         _mainEntrance = mainEntrance;
-        
-        HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
 
-        if (_mainEntrance.IsOutside)
+        if (mainEntrance.IsOutside)
         {
-            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
+            _portalSettings = PortalSettingsManager.GetCurrentMoonSettings();
         }
         else
         {
-            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+            _portalSettings = PortalSettingsManager.GetCurrentInteriorSettings();
         }
 
         InitializePivot();
-        ApplyScreenCrop();
-        ApplyConfigSettings();
+        InitializeScreen();
+        InitializeCamera();
     }
 
     public void LinkPortal(DoorPortal other)
@@ -131,15 +121,14 @@ public class DoorPortal : MonoBehaviour
 
     private void UpdateScreenVisibility()
     {
-        bool enabled = ConfigManager.Portal_Enabled.Value;
+        bool enabled = ConfigManager.Portal_Enabled.Value
+            && _portalSettings.Enabled.Value
+            && _linkedPortal._portalSettings.Enabled.Value;
 
         if (!enabled)
         {
-            if (_isDrawing)
-            {
-                SetDrawing(false);
-            }
-
+            _isInRange = false;
+            OnLocalPlayerExitRange();
             return;
         }
 
@@ -205,30 +194,6 @@ public class DoorPortal : MonoBehaviour
         }
     }
 
-    #region Settings
-    private DoorPortalMoonSettings GetMoonSettings()
-    {
-        return _moonSettingsList.FirstOrDefault(x => x.PlanetName == LevelHelper.GetCurrentMoonName());
-    }
-
-    private bool TryGetMoonSettings(out DoorPortalMoonSettings moonSettings)
-    {
-        moonSettings = GetMoonSettings();
-        return moonSettings != null;
-    }
-
-    private DoorPortalInteriorSettings GetInteriorSettings()
-    {
-        return _interiorSettingsList.FirstOrDefault(x => x.InteriorType == InteriorHelper.GetCurrentInteriorType());
-    }
-
-    private bool TryGetInteriorSettings(out DoorPortalInteriorSettings interiorSettings)
-    {
-        interiorSettings = GetInteriorSettings();
-        return interiorSettings != null;
-    }
-    #endregion
-
     #region Volumes
     private void InitializeVolumes()
     {
@@ -269,28 +234,12 @@ public class DoorPortal : MonoBehaviour
     #region Pivot
     private void InitializePivot()
     {
-        if (_mainEntrance == null)
-            return;
-
-        if (_mainEntrance.IsOutside)
-        {
-            SetDynamicPivot();
-            return;
-        }
-
-        if (TryGetInteriorSettings(out DoorPortalInteriorSettings interiorSettings))
-        {
-            if (interiorSettings.UseDynamicPivot)
-            {
-                SetDynamicPivot();
-            }
-
-            _pivot.localPosition += interiorSettings.PivotPositionOffset;
-        }
-        else
+        if (_portalSettings.UseDynamicPivot)
         {
             SetDynamicPivot();
         }
+
+        _pivot.localPosition += _portalSettings.PivotPositionOffset;
     }
 
     private void SetDynamicPivot()
@@ -366,41 +315,32 @@ public class DoorPortal : MonoBehaviour
     #endregion
 
     #region Drawing
-    private void ApplyScreenCrop()
+    private void InitializeScreen()
     {
-        if (_mainEntrance == null)
-            return;
-
-        if (_mainEntrance.IsOutside)
-            return;
-
-        if (TryGetInteriorSettings(out DoorPortalInteriorSettings interiorSettings))
-        {
-            float cropLeft = interiorSettings.ScreenCropLeft;
-            float cropRight = interiorSettings.ScreenCropRight;
-            float cropTop = interiorSettings.ScreenCropTop;
-            float cropBottom = interiorSettings.ScreenCropBottom;
-
-            SetScreenCrop(cropLeft, cropRight, cropTop, cropBottom);
-        }
+        ApplyScreenCrop();
     }
 
-    private void SetScreenCrop(float left, float right, float top, float bottom)
+    private void ApplyScreenCrop()
     {
-        _screen.material.SetFloat("_CropLeft", left);
-        _screen.material.SetFloat("_CropRight", right);
-        _screen.material.SetFloat("_CropTop", top);
-        _screen.material.SetFloat("_CropBottom", bottom);
+        SetScreenCrop(_portalSettings.ScreenCrop);
+    }
 
-        float xScale = 1f - left - right;
-        float yScale = 1f - top - bottom;
+    private void SetScreenCrop(Padding padding)
+    {
+        _screen.material.SetFloat("_CropLeft", padding.Left);
+        _screen.material.SetFloat("_CropRight", padding.Right);
+        _screen.material.SetFloat("_CropTop", padding.Top);
+        _screen.material.SetFloat("_CropBottom", padding.Bottom);
+
+        float xScale = 1f - padding.Left - padding.Right;
+        float yScale = 1f - padding.Top - padding.Bottom;
 
         _screenOccluder.transform.localScale = new Vector3(xScale, yScale, 1f);
 
         // Offset is in the screen's local space (-0.5 to 0.5 range)
         // Move toward right when right is cropped less, toward left when left is cropped less
-        float xOffset = (left - right) * 0.5f;
-        float yOffset = (bottom - top) * 0.5f;
+        float xOffset = (padding.Left - padding.Right) * 0.5f;
+        float yOffset = (padding.Bottom - padding.Top) * 0.5f;
 
         Vector3 previousOccluderPosition = _screenOccluder.transform.localPosition;
 
@@ -423,6 +363,25 @@ public class DoorPortal : MonoBehaviour
     #endregion
 
     #region Rendering
+    private void InitializeCamera()
+    {
+        if (_mainEntrance == null)
+            return;
+
+        HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
+
+        if (_mainEntrance.IsOutside)
+        {
+            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
+        }
+        else
+        {
+            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+        }
+
+        CreateViewTexture();
+    }
+
     private void ApplyCameraViewRange()
     {
         if (_mainEntrance == null)
@@ -430,22 +389,20 @@ public class DoorPortal : MonoBehaviour
 
         float farClipPlane;
 
-        if (_mainEntrance.IsOutside)
+        if (_portalSettings.OverrideViewRange.Value)
         {
-            float outsideViewRange = ConfigManager.Portal_OutsideViewRange.Value;
-
-            if (TryGetMoonSettings(out DoorPortalMoonSettings moonSettings) && moonSettings.UseViewRange)
-            {
-                farClipPlane = Mathf.Min(moonSettings.ViewRange, outsideViewRange);
-            }
-            else
-            {
-                farClipPlane = outsideViewRange;
-            }
+            farClipPlane = _portalSettings.ViewRange.Value;
         }
         else
         {
-            farClipPlane = ConfigManager.Portal_InsideViewRange.Value;
+            if (_mainEntrance.IsOutside)
+            {
+                farClipPlane = ConfigManager.Portal_OutsideViewRange.Value;
+            }
+            else
+            {
+                farClipPlane = ConfigManager.Portal_InsideViewRange.Value;
+            }
         }
 
         _portalCamera.farClipPlane = farClipPlane;
@@ -493,6 +450,11 @@ public class DoorPortal : MonoBehaviour
 
         if (_mainEntrance == null)
             return;
+
+        if (value)
+        {
+            ApplyCameraViewRange();
+        }
 
         UpdateNightVision();
         UpdateDoor();

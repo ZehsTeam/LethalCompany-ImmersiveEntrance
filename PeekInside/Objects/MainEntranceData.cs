@@ -24,6 +24,7 @@ public class MainEntranceData
         EntranceTeleport = null;
         DoorPortal = null;
         DoorViewBlocker = null;
+        DoorObjects.Clear();
     }
 
     public void SetDoorObjectsEnabled(bool value)

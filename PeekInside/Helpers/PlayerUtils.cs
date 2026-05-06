@@ -128,6 +128,25 @@ internal static class PlayerUtils
         return camera != null;
     }
 
+    public static bool IsLocalPlayerCameraInsideFactory()
+    {
+        if (!TryGetLocalPlayerScript(out PlayerControllerB playerScript))
+            return false;
+
+        if (!playerScript.isPlayerDead)
+        {
+            return playerScript.isInsideFactory;
+        }
+
+        if (playerScript.spectatedPlayerScript != null)
+        {
+            return playerScript.spectatedPlayerScript.isInsideFactory;
+        }
+
+        return false;
+    }
+
+    // TODO: Add config resolution size to this
     public static Size GetCameraRenderTextureSize()
     {
         if (TryGetLocalPlayerCamera(out Camera camera))

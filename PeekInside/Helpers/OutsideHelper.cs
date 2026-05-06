@@ -1,5 +1,4 @@
 ﻿using com.github.zehsteam.PeekInside.Extensions;
-using GameNetcodeStuff;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,29 +18,16 @@ internal static class OutsideHelper
 
     public static void SetSunEnabled(bool value)
     {
-        if (!value)
-        {
-            IsOverridingSun = value;
-        }
-
         TimeOfDay timeOfDay = TimeOfDay.Instance;
 
         if (timeOfDay == null)
             return;
 
-        if (!PlayerUtils.TryGetLocalPlayerScript(out PlayerControllerB playerScript))
-            return;
-
-        if (!playerScript.isInsideFactory)
-            return;
-
         IsOverridingSun = value;
 
-        timeOfDay.sunDirect.enabled = value;
-        timeOfDay.sunIndirect.enabled = value;
-
-        //HDAdditionalLightData additionalLightData = timeOfDay.indirectLightData;
-        //additionalLightData.lightDimmer = Mathf.Lerp(additionalLightData.lightDimmer, 1f, 5f * Time.deltaTime);
+        timeOfDay.sunDirect?.enabled = value;
+        timeOfDay.sunIndirect?.enabled = value;
+        timeOfDay.indirectLightData?.lightDimmer = value ? 1f : 0f;
     }
 
 

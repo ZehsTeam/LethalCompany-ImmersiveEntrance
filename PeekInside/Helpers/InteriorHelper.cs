@@ -92,9 +92,11 @@ internal static class InteriorHelper
 
     public static InteriorType GetCurrentInteriorType()
     {
-        DungeonFlow dungeonFlow = GetCurrentDungeonFlow();
-        if (dungeonFlow == null) return InteriorType.Unknown;
+        return GetInteriorType(GetCurrentDungeonFlow());
+    }
 
+    public static InteriorType GetInteriorType(DungeonFlow dungeonFlow)
+    {
         string name = dungeonFlow.name;
 
         if (name.StartsWith("Level1Flow", StringComparison.OrdinalIgnoreCase))
@@ -115,7 +117,7 @@ internal static class InteriorHelper
         return InteriorType.Unknown;
     }
 
-    private static DungeonFlow GetCurrentDungeonFlow()
+    public static DungeonFlow GetCurrentDungeonFlow()
     {
         return RoundManager.Instance.dungeonFlowTypes[RoundManager.Instance.currentDungeonType].dungeonFlow;
     }

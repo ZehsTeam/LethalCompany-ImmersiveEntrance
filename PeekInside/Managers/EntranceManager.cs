@@ -77,15 +77,10 @@ internal static class EntranceManager
 
     public static void LinkMainEntrancePortals()
     {
-        Logger.LogInfo($"[{nameof(EntranceManager)}] Attempting to link main entrance portals.");
-
-        if (_linkedMainEntrancePortals)
-        {
-            Logger.LogWarning($"[{nameof(EntranceManager)}] Main entrance portals are already linked.");
-            return;
-        }
-
+        if (_linkedMainEntrancePortals) return;
         _linkedMainEntrancePortals = true;
+
+        Logger.LogInfo($"[{nameof(EntranceManager)}] Attempting to link main entrance portals.");
 
         bool success = true;
 

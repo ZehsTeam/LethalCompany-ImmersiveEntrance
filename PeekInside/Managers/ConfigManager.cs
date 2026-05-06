@@ -17,9 +17,6 @@ internal static class ConfigManager
     public static ConfigEntry<float> Portal_OutsideViewRange { get; private set; }
     public static ConfigEntry<float> Portal_InsideViewRange { get; private set; }
 
-    // Mansion
-    public static ConfigEntry<bool> Mansion_ReplaceInteriorMainEntranceDoors { get; private set; }
-
     // Debug
     public static ConfigEntry<bool> Debug_HideDoorObjects { get; private set; }
 
@@ -44,9 +41,6 @@ internal static class ConfigManager
 
         Portal_OutsideViewRange.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
         Portal_InsideViewRange.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
-
-        // Mansion
-        Mansion_ReplaceInteriorMainEntranceDoors = ConfigHelper.Bind("Mansion", "ReplaceInteriorMainEntranceDoors", defaultValue: true, "");
 
         // Debug
         Debug_HideDoorObjects = ConfigHelper.Bind("Debug", "HideDoorObjects", defaultValue: false, "");
