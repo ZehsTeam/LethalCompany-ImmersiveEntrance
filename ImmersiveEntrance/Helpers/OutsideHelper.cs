@@ -58,7 +58,7 @@ internal static class OutsideHelper
         if (!TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
             return [];
 
-        string[] names = ["SteelDoorFake", "SteelDoorFake (1)", "DoorFrame"];
+        string[] names = ["SteelDoorFake", "SteelDoorFake (1)", "DoorFrame", "DoorFrame (1)"];
 
         List<GameObject> doorObjects = [];
 
@@ -104,5 +104,12 @@ internal static class OutsideHelper
     {
         transform = GetVisualDoorsContainer(entranceTeleport);
         return transform != null;
+    }
+
+
+
+    public static string GetCurrentMoonName()
+    {
+        return StartOfRound.Instance?.currentLevel?.PlanetName;
     }
 }

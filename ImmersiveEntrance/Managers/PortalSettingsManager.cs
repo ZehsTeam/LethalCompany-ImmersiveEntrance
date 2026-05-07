@@ -59,7 +59,26 @@ internal static class PortalSettingsManager
                 viewDistance: 30f
             )
         ));
+
+        AddMonesInteriorsSettings();
     }
+
+    #region Modded Interior Settings
+    private static void AddMonesInteriorsSettings()
+    {
+        // TODO: Test this
+        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
+            dungeonFlowName: "EndlessHallDunFlow",
+            new InteriorPortalSettings.InteriorDefaultValues(),
+            new PortalSettings.DefaultValues(
+                pivotPositionOffset: new Vector3(-0.055f, 0f, 0f),
+                screenCrop: new Padding(left: 0.026f, right: 0.026f, top: 0.026f, bottom: 0f)
+            )
+        ));
+
+        // Need to add more
+    }
+    #endregion
 
     public static void Initialize()
     {

@@ -40,6 +40,11 @@ internal static class InteriorHelper
             return viewBlocker.gameObject;
         }
 
+        if (container.TryFind("Plane", out viewBlocker))
+        {
+            return viewBlocker.gameObject;
+        }
+
         return null;
     }
 
@@ -53,10 +58,10 @@ internal static class InteriorHelper
 
         string[] names = [
             // Facility/Mineshaft
-            "SteelDoorFake", "SteelDoorFake (1)", "DoorFrame",
+            "SteelDoorFake", "SteelDoorFake (1)", "DoorFrame", "DoorFrame (1)",
 
-            // Manor
-            "DoorMesh", "DoorMesh (1)", "WideDoorFrame (1)"
+            // Mansion
+            "DoorMesh", "DoorMesh (1)", "WideDoorFrame", "WideDoorFrame (1)"
         ];
 
         List<GameObject> doorObjects = [];
@@ -89,6 +94,23 @@ internal static class InteriorHelper
     }
 
 
+
+    public static string GetCurrentInteriorName()
+    {
+        return GetInteriorName(GetCurrentDungeonFlow());
+    }
+
+    public static string GetInteriorName(DungeonFlow dungeonFlow)
+    {
+        InteriorType interiorType = GetInteriorType(dungeonFlow);
+
+        if (interiorType == InteriorType.Unknown)
+        {
+            return dungeonFlow.name;
+        }
+
+        return interiorType.ToString();
+    }
 
     public static InteriorType GetCurrentInteriorType()
     {
