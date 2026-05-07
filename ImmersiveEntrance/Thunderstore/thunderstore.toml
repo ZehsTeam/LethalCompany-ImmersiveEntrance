@@ -1,0 +1,29 @@
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "Zehs"
+name = "ImmersiveEntrance"
+description = "[v81] See the other side through the main entrance doors."
+websiteUrl = "https://solo.to/crithaxxog"
+containsNsfwContent = false
+
+[package.dependencies]
+BepInEx-BepInExPack = "5.4.2305"
+
+[build]
+icon = "./icon.png"
+readme = "../../README.md"
+outdir = "./Packages"
+
+[[build.copy]]
+source = "./CHANGELOG.md"
+target = "/"
+
+[[build.copy]]
+source = "../../ImmersiveEntrance/bin/Release/netstandard2.1/com.github.zehsteam.ImmersiveEntrance.dll"
+target = "BepInEx/plugins/"
+
+[[build.copy]]
+source = "../../ImmersiveEntrance/bin/Release/netstandard2.1/immersiveentrance_assets"
+target = "BepInEx/plugins/"
