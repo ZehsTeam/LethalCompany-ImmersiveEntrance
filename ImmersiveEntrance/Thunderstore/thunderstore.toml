@@ -5,7 +5,7 @@ schemaVersion = "0.0.1"
 namespace = "Zehs"
 name = "ImmersiveEntrance"
 description = "[v81] See the other side through the main entrance doors."
-websiteUrl = "https://solo.to/crithaxxog"
+websiteUrl = "https://github.com/ZehsTeam/LethalCompany-ImmersiveEntrance"
 containsNsfwContent = false
 
 [package.dependencies]
