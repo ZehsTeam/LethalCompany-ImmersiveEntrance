@@ -3,12 +3,11 @@ using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
-using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
@@ -37,9 +36,6 @@ public class DoorPortal : MonoBehaviour
 
     [SerializeField]
     private Light _nightVision;
-
-    [SerializeField]
-    private Transform _volumeContainer;
     #endregion
 
     private MainEntranceData _mainEntrance;
@@ -76,7 +72,6 @@ public class DoorPortal : MonoBehaviour
     
     private void Start()
     {
-        InitializeVolumes();
         InitializePivot();
     }
 
@@ -196,53 +191,6 @@ public class DoorPortal : MonoBehaviour
         SetDrawing(false);
         _linkedPortal.SetRendering(false);
     }
-
-    #region Volumes
-    private void InitializeVolumes()
-    {
-        CreateVolumesFromScene();
-    }
-
-    private void CreateVolumesFromScene()
-    {
-        foreach (var child in _volumeContainer.GetChildren())
-        {
-            Destroy(child.gameObject);
-        }
-
-        Volume[] volumes = [.. FindObjectsByType<Volume>(FindObjectsSortMode.None)
-            .Where(x => x.isGlobal && x.gameObject.layer == 0)];
-
-        if (volumes.Length == 0)
-            return;
-
-        int targetLayer = LayerMask.NameToLayer("NavigationSurface");
-
-        foreach (var volume in volumes)
-        {
-            string name = volume.gameObject.name;
-
-            if (name.StartsWith("ghosthead", StringComparison.OrdinalIgnoreCase)) // "ghosthead_postprocess" from Poltergeist by coderCleric
-                continue;
-
-            CreateVolume(volume, targetLayer);
-        }
-    }
-
-    private void CreateVolume(Volume sourceVolume, int targetLayer)
-    {
-        GameObject volumeObj = Instantiate(sourceVolume.gameObject, _volumeContainer);
-        volumeObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-
-        volumeObj.layer = targetLayer;
-
-        BoxCollider boxCollider = volumeObj.AddComponent<BoxCollider>();
-        boxCollider.size = Vector3.one * 0.1f;
-
-        Volume volume = volumeObj.GetComponent<Volume>();
-        volume.isGlobal = false;
-    }
-    #endregion
 
     #region Pivot
     private void InitializePivot()
@@ -476,7 +424,27 @@ public class DoorPortal : MonoBehaviour
             return;
 
         _viewTexture?.Release();
-        _viewTexture = new RenderTexture(targetSize.Width, targetSize.Height, 24, RenderTextureFormat.DefaultHDR);
+
+        var descriptor = new RenderTextureDescriptor(targetSize.Width, targetSize.Height)
+        {
+            colorFormat = RenderTextureFormat.ARGB32,        // R8G8B8A8_SRGB equivalent
+            depthStencilFormat = GraphicsFormat.D32_SFloat,  // D32_SFLOAT
+            depthBufferBits = 32,
+            msaaSamples = 1,                                 // Anti-aliasing off
+            mipCount = 0,                                    // Mip maps off
+            useMipMap = false,                               // Mip maps off
+            autoGenerateMips = false,
+            enableRandomWrite = false,                       // Random write off
+            useDynamicScale = false,                         // Dynamic scaling off
+            sRGB = true,                                     // SRGB on for R8G8B8A8_SRGB
+        };
+
+        _viewTexture = new RenderTexture(descriptor)
+        {
+            filterMode = FilterMode.Point
+        };
+
+        _viewTexture.Create();
 
         Logger.LogInfo($"[{nameof(DoorPortal)}] {nameof(CreateViewTexture)}() width: {targetSize.Width}, height: {targetSize.Height}", extended: true);
 
