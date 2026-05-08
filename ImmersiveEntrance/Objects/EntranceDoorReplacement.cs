@@ -6,6 +6,9 @@ namespace com.github.zehsteam.ImmersiveEntrance.Objects;
 public class EntranceDoorReplacement : ScriptableObject
 {
     [field: SerializeField]
+    public GameObject DoorFrame { get; private set; } // TODO: Make this work
+
+    [field: SerializeField]
     public GameObject DoorLeft { get; private set; }
 
     [field: SerializeField]

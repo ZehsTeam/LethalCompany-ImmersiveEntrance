@@ -14,7 +14,7 @@ internal static class RoundManager_Patches
         if (!NetworkUtils.IsExecutingRPCMethod(__instance))
             return;
 
-        Logger.LogInfo($"Current moon is {OutsideHelper.GetCurrentMoonName()}");
+        Logger.LogInfo($"Current moon is {LevelHelper.GetCurrentMoonName()}");
         Logger.LogInfo($"Current interior is {InteriorHelper.GetCurrentInteriorName()}");
 
         EntranceManager.LinkMainEntrancePortals();

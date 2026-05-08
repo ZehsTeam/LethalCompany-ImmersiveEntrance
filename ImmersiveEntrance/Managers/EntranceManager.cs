@@ -67,27 +67,21 @@ internal static class EntranceManager
             OutsideMainEntrance ??= new();
             OutsideMainEntrance.Reset();
             mainEntrance = OutsideMainEntrance;
-            mainEntrance.EntranceTeleport = entranceTeleport;
-            mainEntrance.DoorViewBlocker = OutsideHelper.GetDoorViewBlocker(entranceTeleport);
-            mainEntrance.DoorObjects = OutsideHelper.GetDoorObjects(entranceTeleport);
         }
         else
         {
             InsideMainEntrance ??= new();
             InsideMainEntrance.Reset();
             mainEntrance = InsideMainEntrance;
-            mainEntrance.EntranceTeleport = entranceTeleport;
-            mainEntrance.DoorViewBlocker = InteriorHelper.GetDoorViewBlocker(entranceTeleport);
-            mainEntrance.DoorObjects = InteriorHelper.GetDoorObjects(entranceTeleport);
         }
 
-        if (mainEntrance.HasDoorViewBlocker)
+        mainEntrance.EntranceTeleport = entranceTeleport;
+        mainEntrance.EntranceObjects = EntranceObjectsHelper.GetEntranceObjects(entranceTeleport);
+
+        if (!mainEntrance.EntranceObjects.IsValid())
         {
-            Logger.LogInfo($"[{nameof(EntranceManager)}] Successfully found main entrance door view blocker! {entranceTeleport.GetLogInfo()}");
-        }
-        else
-        {
-            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to spawn main entrance door portal. Could not find main entrance door view blocker. {entranceTeleport.GetLogInfo()}");
+            Logger.LogWarning($"[{nameof(EntranceManager)}] Failed to spawn main entrance door portal. Could not find all entrance objects. {entranceTeleport.GetLogInfo()}");
+            mainEntrance.EntranceObjects.LogMissingObjects();
             mainEntrance?.Reset();
             return;
         }
@@ -106,6 +100,8 @@ internal static class EntranceManager
         doorPortal.SetMainEntranceData(mainEntrance);
 
         Logger.LogInfo($"[{nameof(EntranceManager)}] Successfully spawned main entrance door portal! {entranceTeleport.GetLogInfo()}");
+
+        EntranceDoorReplacementManager.ReplaceDoor(mainEntrance);
     }
 
     public static void LinkMainEntrancePortals()
@@ -144,8 +140,6 @@ internal static class EntranceManager
 
         if (!success)
         {
-            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portals.");
-
             if (OutsideMainEntrance.HasDoorPortal)
             {
                 Object.Destroy(OutsideMainEntrance.DoorPortal.gameObject);

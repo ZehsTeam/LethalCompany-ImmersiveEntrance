@@ -1,6 +1,5 @@
 ﻿using com.github.zehsteam.ImmersiveEntrance.Extensions;
 using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Objects;
@@ -9,39 +8,20 @@ public class MainEntranceData
 {
     public EntranceTeleport EntranceTeleport { get; set; }
     public DoorPortal DoorPortal { get; set; }
-    public GameObject DoorViewBlocker { get; set; }
-    public List<GameObject> DoorObjects { get; set; } = [];
+    public EntranceObjects EntranceObjects { get; set; }
 
     public bool IsOutside => EntranceTeleport.IsOutside();
 
     public bool HasEntranceTeleport => EntranceTeleport != null;
     public bool HasDoorPortal => DoorPortal != null;
-    public bool HasDoorViewBlocker => DoorViewBlocker != null;
-    public bool HasDoorObjects => DoorObjects != null && DoorObjects.Count > 0;
 
     public void Reset()
     {
         EntranceTeleport = null;
-        DoorViewBlocker = null;
-        DoorObjects.Clear();
 
         if (DoorPortal != null)
-        {
             Object.Destroy(DoorPortal);
-        }
-    }
 
-    public void SetDoorObjectsEnabled(bool value)
-    {
-        if (DoorObjects == null || DoorObjects.Count == 0)
-            return;
-
-        foreach (var gameObject in DoorObjects)
-        {
-            if (gameObject == null)
-                continue;
-
-            gameObject.SetActive(value);
-        }
+        EntranceObjects = null;
     }
 }

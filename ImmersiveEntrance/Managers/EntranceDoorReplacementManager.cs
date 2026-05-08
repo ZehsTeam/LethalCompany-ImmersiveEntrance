@@ -1,5 +1,4 @@
 ﻿using com.github.zehsteam.ImmersiveEntrance.Extensions;
-using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
@@ -10,49 +9,40 @@ namespace com.github.zehsteam.ImmersiveEntrance.Managers;
 
 internal static class EntranceDoorReplacementManager
 {
-    public static void ReplaceDoor(EntranceTeleport entranceTeleport)
+    public static void ReplaceDoor(MainEntranceData mainEntrance)
     {
-        if (entranceTeleport == null)
+        if (mainEntrance == null)
             return;
 
-        if (!entranceTeleport.IsMainEntrance())
-            return;
-
-        if (entranceTeleport.IsOutside())
+        if (mainEntrance.IsOutside)
             return;
 
         InteriorPortalSettings interiorSettings = PortalSettingsManager.GetCurrentInteriorSettings();
 
         if (interiorSettings.HasDoorReplacement && interiorSettings.ReplaceDoor.Value)
         {
-            ReplaceDoor(entranceTeleport, interiorSettings.GetDoorReplacement());
+            ReplaceDoor(mainEntrance, interiorSettings.GetDoorReplacement());
         }
     }
 
-    private static void ReplaceDoor(EntranceTeleport entranceTeleport, EntranceDoorReplacement replacement)
+    private static void ReplaceDoor(MainEntranceData mainEntrance, EntranceDoorReplacement replacement)
     {
-        if (entranceTeleport == null || replacement == null)
+        if (mainEntrance == null || replacement == null)
             return;
 
-        if (!InteriorHelper.TryGetVisualDoorsContainer(entranceTeleport, out Transform visualDoorsContainer))
-        {
-            Logger.LogError($"[{nameof(EntranceDoorReplacementManager)}] Failed to replace main entrance door {entranceTeleport.GetLogInfo()} with {replacement.name}. Could not find visual doors container.");
-            return;
-        }
-
-        Transform originalDoorLeft = visualDoorsContainer.Find("DoorMesh (1)");
-        Transform originalDoorRight = visualDoorsContainer.Find("DoorMesh");
+        Transform originalDoorLeft = mainEntrance.EntranceObjects.DoorLeft?.transform;
+        Transform originalDoorRight = mainEntrance.EntranceObjects.DoorRight?.transform;
 
         if (originalDoorLeft == null || originalDoorRight == null)
         {
-            Logger.LogError($"[{nameof(EntranceDoorReplacementManager)}] Failed to replace main entrance door {entranceTeleport.GetLogInfo()} with {replacement.name}. Could not find all of the original door objects.");
+            Logger.LogError($"[{nameof(EntranceDoorReplacementManager)}] Failed to replace main entrance door {mainEntrance.EntranceTeleport.GetLogInfo()} with {replacement.name}. Could not find all of the original door objects.");
             return;
         }
 
         SpawnReplacementDoor(originalDoorLeft, replacement.DoorLeft);
         SpawnReplacementDoor(originalDoorRight, replacement.DoorRight);
 
-        Logger.LogInfo($"[{nameof(EntranceDoorReplacementManager)}] Replaced main entrance door {entranceTeleport.GetLogInfo()} with {replacement.name}", extended: true);
+        Logger.LogInfo($"[{nameof(EntranceDoorReplacementManager)}] Replaced main entrance door {mainEntrance.EntranceTeleport.GetLogInfo()} with {replacement.name}", extended: true);
     }
 
     private static void SpawnReplacementDoor(Transform parent, GameObject prefab)

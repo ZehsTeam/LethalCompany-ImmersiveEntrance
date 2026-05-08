@@ -10,7 +10,6 @@ internal static class EntranceTeleport_Patches
     [HarmonyPostfix]
     private static void Awake_Patch(EntranceTeleport __instance)
     {
-        EntranceDoorReplacementManager.ReplaceDoor(__instance);
         EntranceManager.SpawnDoorPortal(__instance);
     }
 }

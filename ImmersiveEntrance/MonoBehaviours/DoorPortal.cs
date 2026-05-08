@@ -229,6 +229,8 @@ public class DoorPortal : MonoBehaviour
 
             Volume newVolume = obj.GetComponent<Volume>();
             newVolume.isGlobal = false;
+
+            obj.SetActive(volume.gameObject.activeSelf);
         }
     }
     #endregion
@@ -518,11 +520,11 @@ public class DoorPortal : MonoBehaviour
 
         SetObliqueNearClipPlane(playerCamera);
 
-        OutsideHelper.SetSunEnabled(_mainEntrance.IsOutside);
+        LevelHelper.SetSunEnabled(_mainEntrance.IsOutside);
 
         _portalCamera.Render();
 
-        OutsideHelper.SetSunEnabled(!_mainEntrance.IsOutside);
+        LevelHelper.SetSunEnabled(!_mainEntrance.IsOutside);
     }
 
     private void SetObliqueNearClipPlane(Camera playerCamera)
@@ -555,27 +557,24 @@ public class DoorPortal : MonoBehaviour
         if (_mainEntrance == null)
             return;
 
-        if (_mainEntrance.HasDoorViewBlocker)
+        if (IsRendering())
         {
-            if (IsRendering())
-            {
-                _mainEntrance.DoorViewBlocker.SetActive(false);
-            }
-            else
-            {
-                _mainEntrance.DoorViewBlocker.SetActive(!_isDrawing);
-            }
+            _mainEntrance.EntranceObjects.ViewBlocker.SetActive(false);
+        }
+        else
+        {
+            _mainEntrance.EntranceObjects.ViewBlocker.SetActive(!_isDrawing);
         }
 
         bool hideDoorObjects = ConfigManager.Debug_HideDoorObjects.Value;
 
         if (hideDoorObjects)
         {
-            _mainEntrance.SetDoorObjectsEnabled(false);
+            _mainEntrance.EntranceObjects.SetObjectsEnabled(false);
         }
         else
         {
-            _mainEntrance.SetDoorObjectsEnabled(!IsRendering());
+            _mainEntrance.EntranceObjects.SetObjectsEnabled(!IsRendering());
         }
     }
 

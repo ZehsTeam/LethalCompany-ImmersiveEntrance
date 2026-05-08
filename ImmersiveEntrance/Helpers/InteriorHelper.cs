@@ -1,11 +1,6 @@
-﻿using com.github.zehsteam.ImmersiveEntrance.Extensions;
-using com.github.zehsteam.ImmersiveEntrance.Objects;
+﻿using com.github.zehsteam.ImmersiveEntrance.Objects;
 using DunGen.Graph;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Helpers;
 
@@ -24,76 +19,6 @@ internal static class InteriorHelper
 
         occlusionCuller.SetToStartTile();
     }
-
-
-
-    public static GameObject GetDoorViewBlocker(EntranceTeleport entranceTeleport)
-    {
-        if (entranceTeleport == null)
-            return null;
-
-        if (!TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
-            return null;
-
-        if (container.TryFind("LightBehindDoor", out Transform viewBlocker))
-        {
-            return viewBlocker.gameObject;
-        }
-
-        if (container.TryFind("Plane", out viewBlocker))
-        {
-            return viewBlocker.gameObject;
-        }
-
-        return null;
-    }
-
-    public static List<GameObject> GetDoorObjects(EntranceTeleport entranceTeleport)
-    {
-        if (entranceTeleport == null)
-            return [];
-
-        if (!TryGetVisualDoorsContainer(entranceTeleport, out Transform container))
-            return [];
-
-        string[] names = [
-            // Facility/Mineshaft
-            "SteelDoorFake", "SteelDoorFake (1)", "DoorFrame", "DoorFrame (1)",
-
-            // Mansion
-            "DoorMesh", "DoorMesh (1)", "WideDoorFrame", "WideDoorFrame (1)"
-        ];
-
-        List<GameObject> doorObjects = [];
-
-        foreach (var child in container.GetChildren())
-        {
-            if (names.Contains(child.name, StringComparer.OrdinalIgnoreCase))
-            {
-                doorObjects.Add(child.gameObject);
-            }
-        }
-
-        return doorObjects;
-    }
-
-    public static Transform GetVisualDoorsContainer(EntranceTeleport entranceTeleport)
-    {
-        if (entranceTeleport.thisEntranceAnimator != null)
-        {
-            return entranceTeleport.thisEntranceAnimator.transform;
-        }
-
-        return GameObject.FindGameObjectWithTag("InsideEntranceDoor")?.transform ?? null;
-    }
-
-    public static bool TryGetVisualDoorsContainer(EntranceTeleport entranceTeleport, out Transform transform)
-    {
-        transform = GetVisualDoorsContainer(entranceTeleport);
-        return transform != null;
-    }
-
-
 
     public static string GetCurrentInteriorName()
     {
