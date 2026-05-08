@@ -76,6 +76,18 @@ internal static class PortalSettingsManager
             )
         ));
 
+        // TODO: Test this
+        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
+            dungeonFlowName: "HauntedHotelDunFlow",
+            new InteriorPortalSettings.InteriorDefaultValues(
+                getDoorReplacement: () => Assets.MansionEntranceDoorReplacement
+            ),
+            new PortalSettings.DefaultValues(
+                pivotPositionOffset: new Vector3(-0.038f, 0f, 0f),
+                screenCrop: new Padding(left: 0.05f, right: 0.05f, top: 0.025f, bottom: 0f)
+            )
+        ));
+
         // Need to add more
     }
     #endregion

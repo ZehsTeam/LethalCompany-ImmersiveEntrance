@@ -20,8 +20,8 @@ internal static class EntranceManager
 
     public static void Reset()
     {
-        OutsideMainEntrance.Reset();
-        InsideMainEntrance.Reset();
+        OutsideMainEntrance?.Reset();
+        InsideMainEntrance?.Reset();
 
         _linkedMainEntrancePortals = false;
 
@@ -116,17 +116,29 @@ internal static class EntranceManager
         Logger.LogInfo($"[{nameof(EntranceManager)}] Attempting to link main entrance portals.");
         Logger.LogInfo($"[{nameof(EntranceManager)}] There are {_entranceToPortals.Count} entrance portals.", extended: true);
 
+        if (OutsideMainEntrance == null)
+        {
+            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portals. {nameof(OutsideMainEntrance)} is null.");
+            return;
+        }
+
+        if (InsideMainEntrance == null)
+        {
+            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portals. {nameof(InsideMainEntrance)} is null.");
+            return;
+        }
+
         bool success = true;
 
         if (!OutsideMainEntrance.HasDoorPortal)
         {
-            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portal. Outside door portal was not spawned.");
+            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portals. Outside door portal was not spawned.");
             success = false;
         }
 
         if (!InsideMainEntrance.HasDoorPortal)
         {
-            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portal. Inside door portal was not spawned.");
+            Logger.LogError($"[{nameof(EntranceManager)}] Failed to link main entrance portals. Inside door portal was not spawned.");
             success = false;
         }
 

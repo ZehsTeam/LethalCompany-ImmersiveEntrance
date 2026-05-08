@@ -47,7 +47,7 @@ public class DoorPortal : MonoBehaviour
     
     private RenderTexture _viewTexture;
     private bool _isDrawing;
-    private bool _isInRange;
+    private bool _isLocalPlayerInRange;
     private LayerMask _pivotRaycastMask;
 
     private void Awake()
@@ -142,7 +142,7 @@ public class DoorPortal : MonoBehaviour
     {
         if (!IsEnabled())
         {
-            _isInRange = false;
+            _isLocalPlayerInRange = false;
             OnLocalPlayerExitRange();
             return;
         }
@@ -152,15 +152,15 @@ public class DoorPortal : MonoBehaviour
 
         if (inRange && isScreenVisible)
         {
-            if (_isInRange) return;
-            _isInRange = true;
+            if (_isLocalPlayerInRange) return;
+            _isLocalPlayerInRange = true;
 
             OnLocalPlayerEnterRange();
         }
         else
         {
-            if (!_isInRange) return;
-            _isInRange = false;
+            if (!_isLocalPlayerInRange) return;
+            _isLocalPlayerInRange = false;
 
             OnLocalPlayerExitRange();
         }
@@ -188,25 +188,12 @@ public class DoorPortal : MonoBehaviour
         {
             InteriorHelper.RenderInterior();
         }
-        else
-        {
-            //OutsideHelper.SetSunEnabled(true);
-        }
     }
 
     private void OnLocalPlayerExitRange()
     {
         SetDrawing(false);
         _linkedPortal.SetRendering(false);
-
-        if (_mainEntrance.IsOutside)
-        {
-
-        }
-        else
-        {
-            //OutsideHelper.SetSunEnabled(false);
-        }
     }
 
     #region Volumes
@@ -338,6 +325,12 @@ public class DoorPortal : MonoBehaviour
     private void ApplyScreenCrop()
     {
         SetScreenCrop(_portalSettings.ScreenCrop);
+    }
+
+    // This is here to enable testing this in UnityExplorer
+    private void SetScreenCrop(float left, float right, float top, float bottom)
+    {
+        SetScreenCrop(new Padding(left, right, top, bottom));
     }
 
     private void SetScreenCrop(Padding padding)
