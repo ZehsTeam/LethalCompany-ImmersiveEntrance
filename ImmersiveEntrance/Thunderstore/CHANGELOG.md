@@ -1,4 +1,8 @@
-# v1.0.1
+# v1.0.2
+
+- Fixed the [Poltergeist](https://thunderstore.io/c/lethal-company/p/coderCleric/Poltergeist/) mod causing the portal screen to become tinted green.
+
+## v1.0.1
 
 - Fixed not being able to quit out of a pre-game lobby if you haven't landed on any moons yet.
 - Fixed portals not spawning on the moon Adamance.

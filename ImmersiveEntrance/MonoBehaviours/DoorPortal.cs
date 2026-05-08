@@ -3,6 +3,7 @@ using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -215,23 +216,31 @@ public class DoorPortal : MonoBehaviour
         if (volumes.Length == 0)
             return;
 
-        LayerMask volumeLayer = LayerMask.NameToLayer("NavigationSurface");
+        int targetLayer = LayerMask.NameToLayer("NavigationSurface");
 
         foreach (var volume in volumes)
         {
-            GameObject obj = Instantiate(volume.gameObject, _volumeContainer);
-            obj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            string name = volume.gameObject.name;
 
-            obj.layer = volumeLayer;
+            if (name.StartsWith("ghosthead", StringComparison.OrdinalIgnoreCase)) // "ghosthead_postprocess" from Poltergeist by coderCleric
+                continue;
 
-            BoxCollider boxCollider = obj.AddComponent<BoxCollider>();
-            boxCollider.size = Vector3.one * 0.1f;
-
-            Volume newVolume = obj.GetComponent<Volume>();
-            newVolume.isGlobal = false;
-
-            obj.SetActive(volume.gameObject.activeSelf);
+            CreateVolume(volume, targetLayer);
         }
+    }
+
+    private void CreateVolume(Volume sourceVolume, int targetLayer)
+    {
+        GameObject volumeObj = Instantiate(sourceVolume.gameObject, _volumeContainer);
+        volumeObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+        volumeObj.layer = targetLayer;
+
+        BoxCollider boxCollider = volumeObj.AddComponent<BoxCollider>();
+        boxCollider.size = Vector3.one * 0.1f;
+
+        Volume volume = volumeObj.GetComponent<Volume>();
+        volume.isGlobal = false;
     }
     #endregion
 
@@ -418,34 +427,46 @@ public class DoorPortal : MonoBehaviour
         _portalCamera.farClipPlane = farClipPlane;
     }
 
-    private Size GetTargetScreenSize()
+    private Size GetTargetViewTextureSize()
     {
         PixelResolutionType pixelResolution = ConfigManager.Portal_PixelResolution.Value;
 
-        return pixelResolution switch
+        if (pixelResolution == PixelResolutionType.PlayerCamera)
+            return CameraHelper.GetCameraScreenSize();
+
+        Size targetSize = pixelResolution switch
         {
-            PixelResolutionType.PlayerCamera => CameraHelper.GetCameraScreenSize(),
-            PixelResolutionType.Default =>          new Size(860, 520),
-            PixelResolutionType.Performance =>      new Size(620, 364),
+            PixelResolutionType.Default => new Size(860, 520),
+            PixelResolutionType.Performance => new Size(620, 364),
             PixelResolutionType.UltraPerformance => new Size(400, 260),
-            PixelResolutionType.Retro =>            new Size(186, 104),
+            PixelResolutionType.Retro => new Size(186, 104),
             _ => CameraHelper.GetCameraScreenSize(),
         };
+
+        Size playerCameraSize = CameraHelper.GetCameraScreenSize();
+
+        if (targetSize.Width > playerCameraSize.Width)
+            targetSize.Width = playerCameraSize.Width;
+
+        if (targetSize.Height > playerCameraSize.Height)
+            targetSize.Height = playerCameraSize.Height;
+
+        return targetSize;
     }
 
     private void CreateViewTexture()
     {
-        Size targetScreenSize = GetTargetScreenSize();
+        Size targetSize = GetTargetViewTextureSize();
 
         bool CanCreate()
         {
             if (_viewTexture == null)
                 return true;
 
-            if (_viewTexture.width != targetScreenSize.Width)
+            if (_viewTexture.width != targetSize.Width)
                 return true;
 
-            if (_viewTexture.height != targetScreenSize.Height)
+            if (_viewTexture.height != targetSize.Height)
                 return true;
 
             return false;
@@ -455,9 +476,9 @@ public class DoorPortal : MonoBehaviour
             return;
 
         _viewTexture?.Release();
-        _viewTexture = new RenderTexture(targetScreenSize.Width, targetScreenSize.Height, 24, RenderTextureFormat.DefaultHDR);
+        _viewTexture = new RenderTexture(targetSize.Width, targetSize.Height, 24, RenderTextureFormat.DefaultHDR);
 
-        Logger.LogInfo($"[{nameof(DoorPortal)}] {nameof(CreateViewTexture)}() width: {targetScreenSize.Width}, height: {targetScreenSize.Height}", extended: true);
+        Logger.LogInfo($"[{nameof(DoorPortal)}] {nameof(CreateViewTexture)}() width: {targetSize.Width}, height: {targetSize.Height}", extended: true);
 
         _portalCamera.targetTexture = _viewTexture;
 

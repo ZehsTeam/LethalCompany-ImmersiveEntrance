@@ -7,7 +7,7 @@
     
     <AssemblyName>com.github.zehsteam.$(MSBuildProjectName)</AssemblyName> <!-- PLUGIN_GUID -->
     <Product>$(MSBuildProjectName)</Product>                               <!-- PLUGIN_NAME -->
-    <Version>1.0.1</Version>                                               <!-- PLUGIN_VERSION -->
+    <Version>1.0.2</Version>                                               <!-- PLUGIN_VERSION -->
     <Authors>Zehs</Authors>
     <Description>See the other side through the main entrance doors.</Description>
     <Copyright>Copyright © 2026 Zehs</Copyright>
