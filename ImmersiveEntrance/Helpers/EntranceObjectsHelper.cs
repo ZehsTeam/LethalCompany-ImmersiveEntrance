@@ -1,5 +1,7 @@
 ﻿using com.github.zehsteam.ImmersiveEntrance.Extensions;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Helpers;
@@ -222,12 +224,28 @@ internal static class EntranceObjectsHelper
             {
                 return environment.transform.Find("OutsideEntranceVisualDoorsContainer")?.transform;
             }
-
-            return null;
         }
         else
         {
-            return GameObject.FindWithTag("InsideEntranceDoor")?.transform;
+            if (GameObjectHelper.TryFindWithTag("InsideEntranceDoor", out GameObject result))
+            {
+                return result.transform;
+            }
         }
+        
+        // Try to find VisualDoorsContainer from inside EntranceTeleport
+        List<Transform> children = entranceTeleport.transform.GetChildren(_transformFindOptions);
+
+        foreach (var child in children)
+        {
+            string name = child.gameObject.name;
+
+            if (name.Contains("VisualDoorsContainer", StringComparison.OrdinalIgnoreCase))
+            {
+                return child;
+            }
+        }
+
+        return null;
     }
 }

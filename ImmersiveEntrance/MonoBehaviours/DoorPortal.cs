@@ -229,7 +229,7 @@ public class DoorPortal : MonoBehaviour
 
         Vector3 newPosition = hitForward.point + _pivot.forward * offsetFromWall;
 
-        if (TryRaycastForPivot(origin, -_pivot.up, out RaycastHit hitDown, maxDistance: 5f))
+        if (TryRaycastForPivot(newPosition, -_pivot.up, out RaycastHit hitDown, maxDistance: 5f))
         {
             float yOffset = _screen.transform.lossyScale.y / 2f;
             float yPosition = hitDown.point.y + yOffset;

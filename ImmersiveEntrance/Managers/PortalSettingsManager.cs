@@ -60,10 +60,12 @@ internal static class PortalSettingsManager
             )
         ));
 
+        // Modded
         AddMonesInteriorsSettings();
+        AddSlaughterhouseSettings();
     }
 
-    #region Modded Interior Settings
+    #region Modded Settings
     private static void AddMonesInteriorsSettings()
     {
         // TODO: Test this
@@ -89,6 +91,17 @@ internal static class PortalSettingsManager
         ));
 
         // Need to add more
+    }
+
+    private static void AddSlaughterhouseSettings()
+    {
+        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
+            dungeonFlowName: "SlaughterhouseFlow",
+            new InteriorPortalSettings.InteriorDefaultValues(),
+            new PortalSettings.DefaultValues(
+                viewDistance: 100f
+            )
+        ));
     }
     #endregion
 
