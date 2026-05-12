@@ -1,6 +1,6 @@
 ﻿namespace com.github.zehsteam.ImmersiveEntrance.Objects;
 
-internal struct Padding
+public struct Padding
 {
     public float Left { get; set; }
     public float Right { get; set; }

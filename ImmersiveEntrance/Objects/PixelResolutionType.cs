@@ -1,6 +1,6 @@
 ﻿namespace com.github.zehsteam.ImmersiveEntrance.Objects;
 
-internal enum PixelResolutionType
+public enum PixelResolutionType
 {
     PlayerCamera,
     Default,

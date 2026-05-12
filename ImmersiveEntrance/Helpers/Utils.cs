@@ -1,5 +1,8 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
+using System;
+using System.Collections;
 using System.IO;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -48,5 +51,27 @@ internal static class Utils
         if (percent <= 0f) return false;
         if (percent >= 100f) return true;
         return Random.value * 100f <= percent;
+    }
+
+    public static void InvokeNextFrame(Action action)
+    {
+        IEnumerator Coroutine()
+        {
+            yield return null;
+            action?.Invoke();
+        }
+
+        CoroutineRunner.Start(Coroutine());
+    }
+
+    public static void InvokeAfterDelay(Action action, TimeSpan timeSpan)
+    {
+        IEnumerator Coroutine()
+        {
+            yield return new WaitForSeconds((float)timeSpan.TotalSeconds);
+            action?.Invoke();
+        }
+
+        CoroutineRunner.Start(Coroutine());
     }
 }

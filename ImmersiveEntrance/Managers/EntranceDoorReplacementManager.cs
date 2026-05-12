@@ -17,7 +17,8 @@ internal static class EntranceDoorReplacementManager
         if (mainEntrance.IsOutside)
             return;
 
-        InteriorPortalSettings interiorSettings = PortalSettingsManager.GetCurrentInteriorSettings();
+        if (!PortalSettingsManager.InteriorDatabase.TryGetEntryForCurrentInterior(out InteriorPortalSettings interiorSettings))
+            return;
 
         if (interiorSettings.HasDoorReplacement && interiorSettings.ReplaceDoor.Value)
         {

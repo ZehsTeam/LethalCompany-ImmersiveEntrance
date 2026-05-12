@@ -3,6 +3,7 @@ using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -49,8 +50,6 @@ public class DoorPortal : MonoBehaviour
 
     private void Awake()
     {
-        _pivotRaycastMask = LayerMask.GetMask("Room");
-
         _portalCamera.enabled = false;
 
         SetDrawing(false);
@@ -72,7 +71,7 @@ public class DoorPortal : MonoBehaviour
     
     private void Start()
     {
-        InitializePivot();
+        Utils.InvokeAfterDelay(InitializePivot, TimeSpan.FromSeconds(0.1f));
     }
 
     private void Update()
@@ -97,11 +96,11 @@ public class DoorPortal : MonoBehaviour
 
         if (mainEntrance.IsOutside)
         {
-            _portalSettings = PortalSettingsManager.GetCurrentMoonSettings();
+            _portalSettings = PortalSettingsManager.MoonDatabase.GetEntryForCurrentMoon();
         }
         else
         {
-            _portalSettings = PortalSettingsManager.GetCurrentInteriorSettings();
+            _portalSettings = PortalSettingsManager.InteriorDatabase.GetEntryForCurrentInterior();
         }
         
         InitializeScreen();
@@ -134,6 +133,7 @@ public class DoorPortal : MonoBehaviour
         return true;
     }
 
+    #region Screen Visibility
     private void UpdateScreenVisibility()
     {
         if (!IsEnabled())
@@ -170,7 +170,7 @@ public class DoorPortal : MonoBehaviour
         float range = ConfigManager.Portal_ActivationRange.Value;
 
         Vector3 cameraPosition = playerCamera.transform.position;
-        float distance = Vector3.Distance(cameraPosition, transform.position);
+        float distance = Vector3.Distance(cameraPosition, _pivot.position);
 
         return distance <= range;
     }
@@ -191,20 +191,32 @@ public class DoorPortal : MonoBehaviour
         SetDrawing(false);
         _linkedPortal.SetRendering(false);
     }
+    #endregion
 
     #region Pivot
     private void InitializePivot()
     {
-        if (_portalSettings.UseDynamicPivot)
+        InitializePivot(_portalSettings.UseDynamicPivot, _portalSettings.PivotPositionOffset, _portalSettings.PivotRotationOffset);
+    }
+
+    public void InitializePivot(bool useDynamicPivot, Vector3 positionOffset, Vector3 rotationOffset)
+    {
+        _pivot.localPosition = Vector3.zero;
+        _pivot.localRotation = Quaternion.identity;
+
+        if (useDynamicPivot)
         {
             SetDynamicPivot();
         }
 
-        _pivot.localPosition += _portalSettings.PivotPositionOffset;
+        _pivot.localPosition += positionOffset;
+        _pivot.localRotation = Quaternion.Euler(_pivot.localRotation.eulerAngles + rotationOffset);
     }
 
     private void SetDynamicPivot()
     {
+        _pivotRaycastMask = LayerMask.GetMask("Room", "Colliders");
+
         if (TryGetDynamicPivotPosition(out Vector3 position))
         {
             _pivot.position = position;
@@ -225,7 +237,7 @@ public class DoorPortal : MonoBehaviour
         if (!TryRaycastForPivot(origin, _pivot.forward, out RaycastHit hitForward))
             return false;
 
-        float offsetFromWall = -0.001f;
+        float offsetFromWall = -0.0015f;
 
         Vector3 newPosition = hitForward.point + _pivot.forward * offsetFromWall;
 
@@ -287,17 +299,29 @@ public class DoorPortal : MonoBehaviour
     }
 
     // This is here to enable testing this in UnityExplorer
-    private void SetScreenCrop(float left, float right, float top, float bottom)
+    public void SetScreenCrop(float left, float right, float top, float bottom)
     {
         SetScreenCrop(new Padding(left, right, top, bottom));
     }
 
-    private void SetScreenCrop(Padding padding)
+    public void SetScreenCrop(Padding padding, bool isUnityEditor = false)
     {
-        _screen.material.SetFloat("_CropLeft", padding.Left);
-        _screen.material.SetFloat("_CropRight", padding.Right);
-        _screen.material.SetFloat("_CropTop", padding.Top);
-        _screen.material.SetFloat("_CropBottom", padding.Bottom);
+        void SetMaterialFloat(string name, float value)
+        {
+            if (isUnityEditor)
+            {
+                //_screen.sharedMaterial.SetFloat(name, value);
+            }
+            else
+            {
+                _screen.material.SetFloat(name, value);
+            }
+        }
+
+        SetMaterialFloat("_CropLeft", padding.Left);
+        SetMaterialFloat("_CropRight", padding.Right);
+        SetMaterialFloat("_CropTop", padding.Top);
+        SetMaterialFloat("_CropBottom", padding.Bottom);
 
         float xScale = 1f - padding.Left - padding.Right;
         float yScale = 1f - padding.Top - padding.Bottom;

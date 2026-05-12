@@ -5,7 +5,7 @@ using System;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
 
-internal class InteriorPortalSettings : PortalSettings
+public class InteriorPortalSettings : PortalSettings
 {
     public struct InteriorDefaultValues
     {
@@ -37,6 +37,8 @@ internal class InteriorPortalSettings : PortalSettings
 
     private InteriorDefaultValues _interiorDefaultValues;
 
+    private bool _boundConfigs;
+
     public InteriorPortalSettings(InteriorType interiorType, InteriorDefaultValues interiorDefaultValues, DefaultValues defaultValues) : base(defaultValues)
     {
         InteriorType = interiorType;
@@ -52,6 +54,9 @@ internal class InteriorPortalSettings : PortalSettings
 
     public override void BindConfigs()
     {
+        if (_boundConfigs) return;
+        _boundConfigs = true;
+
         base.BindConfigs();
 
         if (HasDoorReplacement)

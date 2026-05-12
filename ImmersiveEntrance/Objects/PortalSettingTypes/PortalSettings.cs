@@ -5,13 +5,14 @@ using UnityEngine;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
 
-internal abstract class PortalSettings
+public abstract class PortalSettings
 {
     public struct DefaultValues
     {
         public bool Enabled { get; set; }
         public bool UseDynamicPivot { get; set; }
         public Vector3 PivotPositionOffset { get; set; }
+        public Vector3 PivotRotationOffset { get; set; }
         public Padding ScreenCrop { get; set; }
         public bool UseViewDistance { get; set; }
         public float ViewDistance { get; set; }
@@ -23,11 +24,12 @@ internal abstract class PortalSettings
             ViewDistance = 50f;
         }
 
-        public DefaultValues(bool enabled = true, bool useDynamicPivot = true, Vector3? pivotPositionOffset = null, Padding? screenCrop = null, float? viewDistance = null)
+        public DefaultValues(bool enabled = true, bool useDynamicPivot = true, Vector3? pivotPositionOffset = null, Vector3? pivotRotationOffset = null, Padding? screenCrop = null, float? viewDistance = null)
         {
             Enabled = enabled;
             UseDynamicPivot = useDynamicPivot;
             PivotPositionOffset = pivotPositionOffset ?? Vector3.zero;
+            PivotRotationOffset = pivotRotationOffset ?? Vector3.zero;
             ScreenCrop = screenCrop ?? new Padding();
             UseViewDistance = viewDistance.HasValue;
             ViewDistance = viewDistance ?? 50f;
@@ -37,11 +39,12 @@ internal abstract class PortalSettings
     public ConfigEntry<bool> Enabled { get; private set; }
     public bool UseDynamicPivot => _defaultValues.UseDynamicPivot;
     public Vector3 PivotPositionOffset => _defaultValues.PivotPositionOffset;
+    public Vector3 PivotRotationOffset => _defaultValues.PivotRotationOffset;
     public Padding ScreenCrop => _defaultValues.ScreenCrop;
     public ConfigEntry<bool> UseViewDistance { get; private set; }
     public ConfigEntry<float> ViewDistance { get; private set; }
 
-    private DefaultValues _defaultValues;
+    protected DefaultValues _defaultValues;
 
     public abstract string ConfigSection { get; }
 

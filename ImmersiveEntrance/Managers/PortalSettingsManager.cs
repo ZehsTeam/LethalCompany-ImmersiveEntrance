@@ -1,75 +1,108 @@
-﻿using com.github.zehsteam.ImmersiveEntrance.Helpers;
-using com.github.zehsteam.ImmersiveEntrance.Objects;
+﻿using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
 using DunGen.Graph;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Managers;
 
 internal static class PortalSettingsManager
 {
-    public static IReadOnlyList<MoonPortalSettings> MoonEntries => _moonEntries;
-    private static readonly List<MoonPortalSettings> _moonEntries = [];
-    private static readonly List<MoonPortalSettings> _predefinedMoonEntries = [];
+    public static MoonPortalSettingsDatabase MoonDatabase { get; private set; } = new();
+    public static InteriorPortalSettingsDatabase InteriorDatabase { get; private set; } = new();
 
-    public static IReadOnlyList<InteriorPortalSettings> InteriorEntries => _interiorEntries;
-    private static readonly List<InteriorPortalSettings> _interiorEntries = [];
-    private static readonly List<InteriorPortalSettings> _predefinedInteriorEntries = [];
+    private static readonly MoonPortalSettingsDatabase _predefinedMoonDatabase = new();
+    private static readonly InteriorPortalSettingsDatabase _predefinedInteriorDatabase = new();
 
     private static bool _initialized;
 
     static PortalSettingsManager()
     {
-        // Predefined Moon Entries
-        _predefinedMoonEntries.Add(new MoonPortalSettings(
-            planetName: "85 Rend",
-            new PortalSettings.DefaultValues(
-                viewDistance: 75f
-            )
-        ));
+        AddPredefinedEntries();
+    }
 
-        // Predefined Interior Entries
-        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
-            InteriorType.Facility,
-            new InteriorPortalSettings.InteriorDefaultValues(),
-            new PortalSettings.DefaultValues(
-                useDynamicPivot: false,
-                pivotPositionOffset: new Vector3(0f, 0f, -0.133f)
-            )
-        ));
-
-        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
-            InteriorType.Mansion,
-            new InteriorPortalSettings.InteriorDefaultValues(
-                getDoorReplacement: () => Assets.MansionEntranceDoorReplacement
-            ),
-            new PortalSettings.DefaultValues(
-                pivotPositionOffset: new Vector3(-0.038f, 0f, 0f),
-                screenCrop: new Padding(left: 0.05f, right: 0.05f, top: 0.025f, bottom: 0f)
-            )
-        ));
-        
-        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
-            InteriorType.Mineshaft,
-            new InteriorPortalSettings.InteriorDefaultValues(),
-            new PortalSettings.DefaultValues(
-                pivotPositionOffset: new Vector3(-0.105f, 0f, 0f),
-                viewDistance: 30f
-            )
-        ));
+    private static void AddPredefinedEntries()
+    {
+        AddPredefinedMoonEntries();
+        AddPredefinedInteriorEntries();
 
         // Modded
         AddMonesInteriorsSettings();
         AddSlaughterhouseSettings();
     }
 
-    #region Modded Settings
+    #region Predefined Vanilla Entries
+    private static void AddPredefinedMoonEntries()
+    {
+        _predefinedMoonDatabase.AddEntry(new MoonPortalSettings(
+            planetName: "41 Experimentation",
+            new PortalSettings.DefaultValues(
+                useDynamicPivot: false,
+                pivotPositionOffset: new Vector3(0.02f, 0.03417349f, 0.203743f)
+            )
+        ));
+
+        _predefinedMoonDatabase.AddEntry(new MoonPortalSettings(
+            planetName: "56 Vow",
+            new PortalSettings.DefaultValues(
+                pivotPositionOffset: new Vector3(0.04f, 0f, 0f)
+            )
+        ));
+
+        _predefinedMoonDatabase.AddEntry(new MoonPortalSettings(
+            planetName: "85 Rend",
+            new PortalSettings.DefaultValues(
+                viewDistance: 75f
+            )
+        ));
+
+        _predefinedMoonDatabase.AddEntry(new MoonPortalSettings(
+            planetName: "7 Dine",
+            new PortalSettings.DefaultValues(
+                pivotPositionOffset: new Vector3(0.06f, 0f, 0f),
+                screenCrop: new Padding(left: 0f, right: 0f, top: 0.03f, bottom: 0f)
+            )
+        ));
+    }
+
+    private static void AddPredefinedInteriorEntries()
+    {
+        _predefinedInteriorDatabase.AddEntry(new InteriorPortalSettings(
+            InteriorType.Facility,
+            new InteriorPortalSettings.InteriorDefaultValues(),
+            new PortalSettings.DefaultValues(
+                useDynamicPivot: false,
+                pivotPositionOffset: new Vector3(-0.1f, 0.03f, 0.067f) // GET Y POS AGAIN
+            )
+        ));
+
+        _predefinedInteriorDatabase.AddEntry(new InteriorPortalSettings(
+            InteriorType.Mansion,
+            new InteriorPortalSettings.InteriorDefaultValues(
+                getDoorReplacement: () => Assets.MansionEntranceDoorReplacement
+            ),
+            new PortalSettings.DefaultValues(
+                pivotPositionOffset: new Vector3(-0.011f, 0f, 0f),
+                screenCrop: new Padding(left: 0.05f, right: 0.05f, top: 0.025f, bottom: 0f)
+            )
+        ));
+
+        _predefinedInteriorDatabase.AddEntry(new InteriorPortalSettings(
+            InteriorType.Mineshaft,
+            new InteriorPortalSettings.InteriorDefaultValues(),
+            new PortalSettings.DefaultValues(
+                pivotPositionOffset: new Vector3(-0.09f, 0f, 0f),
+                screenCrop: new Padding(left: 0f, right: 0f, top: 0.02f, bottom: 0f),
+                viewDistance: 30f
+            )
+        ));
+    }
+    #endregion
+
+    #region Predefined Modded Entries
     private static void AddMonesInteriorsSettings()
     {
         // TODO: Test this
-        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
+        _predefinedInteriorDatabase.AddEntry(new InteriorPortalSettings(
             dungeonFlowName: "EndlessHallDunFlow",
             new InteriorPortalSettings.InteriorDefaultValues(),
             new PortalSettings.DefaultValues(
@@ -79,13 +112,13 @@ internal static class PortalSettingsManager
         ));
 
         // TODO: Test this
-        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
+        _predefinedInteriorDatabase.AddEntry(new InteriorPortalSettings(
             dungeonFlowName: "HauntedHotelDunFlow",
             new InteriorPortalSettings.InteriorDefaultValues(
                 getDoorReplacement: () => Assets.MansionEntranceDoorReplacement
             ),
             new PortalSettings.DefaultValues(
-                pivotPositionOffset: new Vector3(-0.038f, 0f, 0f),
+                pivotPositionOffset: new Vector3(-0.011f, 0f, 0f),
                 screenCrop: new Padding(left: 0.05f, right: 0.05f, top: 0.025f, bottom: 0f)
             )
         ));
@@ -95,7 +128,7 @@ internal static class PortalSettingsManager
 
     private static void AddSlaughterhouseSettings()
     {
-        _predefinedInteriorEntries.Add(new InteriorPortalSettings(
+        _predefinedInteriorDatabase.AddEntry(new InteriorPortalSettings(
             dungeonFlowName: "SlaughterhouseFlow",
             new InteriorPortalSettings.InteriorDefaultValues(),
             new PortalSettings.DefaultValues(
@@ -114,13 +147,19 @@ internal static class PortalSettingsManager
         BindConfigs();
     }
 
-    #region Register
     private static void PopulateEntries()
     {
         PopulateMoonEntries();
         PopulateInteriorEntries();
     }
 
+    private static void BindConfigs()
+    {
+        InteriorDatabase.BindConfigs();
+        MoonDatabase.BindConfigs();
+    }
+
+    #region Populate Entries
     private static void PopulateMoonEntries()
     {
         if (StartOfRound.Instance == null)
@@ -149,100 +188,24 @@ internal static class PortalSettingsManager
         }
     }
 
-    private static void AddMoonEntry(SelectableLevel level)
+    private static bool AddMoonEntry(SelectableLevel level)
     {
-        if (!level.planetHasTime)
-            return;
-
-        if (_moonEntries.Any(x => x.Matches(level)))
-            return;
-
-        MoonPortalSettings predefinedSettings = _predefinedMoonEntries.FirstOrDefault(x => x.Matches(level));
-
-        if (predefinedSettings != null)
+        if (_predefinedMoonDatabase.TryGetEntry(level, out MoonPortalSettings predefinedSettings))
         {
-            _moonEntries.Add(predefinedSettings);
-            return;
+            return MoonDatabase.AddEntry(predefinedSettings);
         }
 
-        _moonEntries.Add(new MoonPortalSettings(level.PlanetName, new PortalSettings.DefaultValues()));
+        return MoonDatabase.AddEntry(level);
     }
 
-    private static void AddInteriorEntry(DungeonFlow dungeonFlow)
+    private static bool AddInteriorEntry(DungeonFlow dungeonFlow)
     {
-        if (_interiorEntries.Any(x => x.Matches(dungeonFlow)))
-            return;
-
-        InteriorPortalSettings predefinedSettings = _predefinedInteriorEntries.FirstOrDefault(x => x.Matches(dungeonFlow));
-
-        if (predefinedSettings != null)
+        if (_predefinedInteriorDatabase.TryGetEntry(dungeonFlow, out InteriorPortalSettings predefinedSettings))
         {
-            _interiorEntries.Add(predefinedSettings);
-            return;
+            return InteriorDatabase.AddEntry(predefinedSettings);
         }
 
-        var interiorDefaultValues = new InteriorPortalSettings.InteriorDefaultValues();
-        var defaultValues = new PortalSettings.DefaultValues();
-
-        InteriorType interiorType = InteriorHelper.GetInteriorType(dungeonFlow);
-
-        if (interiorType == InteriorType.Unknown)
-        {
-            _interiorEntries.Add(new InteriorPortalSettings(dungeonFlow.name, interiorDefaultValues, defaultValues));
-            return;
-        }
-
-        _interiorEntries.Add(new InteriorPortalSettings(interiorType, interiorDefaultValues, defaultValues));
-    }
-    #endregion
-
-    #region Config
-    private static void BindConfigs()
-    {
-        BindInteriorConfigs();
-        BindMoonConfigs();
-    }
-
-    private static void BindMoonConfigs()
-    {
-        List<MoonPortalSettings> sortedEntries = [.. _moonEntries.OrderBy(x => x.GetStrippedPlanetName())];
-
-        foreach (var entry in sortedEntries)
-        {
-            entry.BindConfigs();
-        }
-    }
-
-    private static void BindInteriorConfigs()
-    {
-        List<InteriorPortalSettings> sortedEntries = [.. _interiorEntries.OrderBy(x => x.GetInteriorName())];
-
-        foreach (var entry in sortedEntries)
-        {
-            entry.BindConfigs();
-        }
-    }
-    #endregion
-
-    #region Get
-    public static MoonPortalSettings GetCurrentMoonSettings()
-    {
-        return GetMoonSettings(StartOfRound.Instance?.currentLevel);
-    }
-
-    public static InteriorPortalSettings GetCurrentInteriorSettings()
-    {
-        return GetInteriorSettings(InteriorHelper.GetCurrentDungeonFlow());
-    }
-
-    public static MoonPortalSettings GetMoonSettings(SelectableLevel level)
-    {
-        return _moonEntries.FirstOrDefault(x => x.Matches(level));
-    }
-
-    public static InteriorPortalSettings GetInteriorSettings(DungeonFlow dungeonFlow)
-    {
-        return _interiorEntries.FirstOrDefault(x => x.Matches(dungeonFlow));
+        return InteriorDatabase.AddEntry(dungeonFlow);
     }
     #endregion
 }

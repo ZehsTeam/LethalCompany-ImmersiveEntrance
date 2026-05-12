@@ -1,6 +1,6 @@
 ﻿namespace com.github.zehsteam.ImmersiveEntrance.Objects;
 
-internal enum InteriorType
+public enum InteriorType
 {
     Facility,
     Mansion,

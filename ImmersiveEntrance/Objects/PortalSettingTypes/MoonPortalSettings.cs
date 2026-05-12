@@ -2,7 +2,7 @@
 
 namespace com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
 
-internal class MoonPortalSettings : PortalSettings
+public class MoonPortalSettings : PortalSettings
 {
     public string PlanetName { get; private set; }
 
