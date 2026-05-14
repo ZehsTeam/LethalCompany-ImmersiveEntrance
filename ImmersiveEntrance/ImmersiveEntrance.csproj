@@ -169,6 +169,8 @@
     <GaleProfileName>Mod Development</GaleProfileName>
     
     <GaleDataFolder>$(AppData)\com.kesomannen.gale</GaleDataFolder>
+    
+    <UnityProjectShadersFolder>D:\LethalCompanyUnityProjects\LethalCompanyV81\Assets\LethalCompany\Mods\Plugins\ImmersiveEntrance\Shaders</UnityProjectShadersFolder>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -190,6 +192,25 @@
     
     <!-- AssetBundle -->
     <Copy Condition="Exists('$(BepInExPluginsFolder)') And Exists('$(TargetDir)\$(AssetBundleFileName)')" SourceFiles="$(TargetDir)\$(AssetBundleFileName)" DestinationFolder="$(PluginFolder)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+  </Target>
+  
+  <!-- Copy shaders to Unity project -->
+  <Target Name="CopyShadersToUnityProject" AfterTargets="PostBuildEvent">
+    <Message Text="Copying shaders to Unity project" Importance="high" />
+
+    <ItemGroup>
+      <ShaderFiles Include="$(ProjectDir)..\Shaders\**\*.shader" />
+    </ItemGroup>
+    
+    <Copy
+      SourceFiles="@(ShaderFiles)"
+      DestinationFiles="@(ShaderFiles->'$(UnityProjectShadersFolder)\%(RecursiveDir)%(Filename)%(Extension)')"
+      OverwriteReadOnlyFiles="true"
+      SkipUnchangedFiles="true"
+      />
+    
+    <Message Text="Copied @(ShaderFiles->Count()) shader(s) to $(UnityProjectShadersFolder)" Importance="high" />
+    <Message Text="$(ProjectDir)" Importance="high" />
   </Target>
   
   <!-- Call with `dotnet build -target:PackThunderstore` -->

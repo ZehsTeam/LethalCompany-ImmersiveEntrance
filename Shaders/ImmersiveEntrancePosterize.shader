@@ -128,6 +128,8 @@ Shader "FullScreen/ImmersiveEntrancePosterize"
         return curvedEdge * strength;
     }
 
+    TEXTURE2D_X(_ExclusionMaskBuffer);
+
     float4 FullScreenReadPosterize(Varyings varyings) : SV_Target
     {
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(varyings);
@@ -140,6 +142,12 @@ Shader "FullScreen/ImmersiveEntrancePosterize"
 
         // Early escape to avoid drawing over the skybox.
         if (rawDepth == 0.0) {
+            return float4(baseColor, 1.0);
+        }
+
+        // Early escape for excluded objects
+        float exclusionMask = LOAD_TEXTURE2D_X(_ExclusionMaskBuffer, cs).r;
+        if (exclusionMask == 0.0) {
             return float4(baseColor, 1.0);
         }
 

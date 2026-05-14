@@ -13,8 +13,10 @@ Shader "ImmersiveEntrance/PortalScreen"
         Tags
         {
             "RenderType" = "Opaque"
-            "Queue" = "Geometry+1"
+            "Queue"      = "Geometry+1"
         }
+
+        // Pass 1: Normal rendering pass, no LightMode so HDRP renders it as usual
         Pass
         {
             ZWrite On
@@ -24,7 +26,6 @@ Shader "ImmersiveEntrance/PortalScreen"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-
             #include "UnityCG.cginc"
 
             struct Attributes
@@ -66,6 +67,44 @@ Shader "ImmersiveEntrance/PortalScreen"
 
                 float2 screenUV = IN.screenPos.xy / IN.screenPos.w;
                 return tex2D(_MainTex, screenUV);
+            }
+            ENDHLSL
+        }
+
+        // Pass 2: Exclusion mask pass, only used by the custom pass DrawRenderers
+        Pass
+        {
+            Tags { "LightMode" = "PosterizeExclusion" }
+
+            ZWrite Off
+            ZTest LEqual
+            Cull Back
+
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "UnityCG.cginc"
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+            };
+
+            struct Varyings
+            {
+                float4 positionCS : SV_POSITION;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionCS = UnityObjectToClipPos(IN.positionOS);
+                return OUT;
+            }
+
+            float4 frag(Varyings IN) : SV_Target
+            {
+                return float4(0, 0, 0, 1); // Black = excluded
             }
             ENDHLSL
         }
