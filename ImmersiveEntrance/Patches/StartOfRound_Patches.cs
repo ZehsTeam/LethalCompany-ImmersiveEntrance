@@ -1,4 +1,5 @@
-﻿using com.github.zehsteam.ImmersiveEntrance.Managers;
+﻿using com.github.zehsteam.ImmersiveEntrance.Helpers;
+using com.github.zehsteam.ImmersiveEntrance.Managers;
 using HarmonyLib;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Patches;
@@ -12,6 +13,7 @@ internal static class StartOfRound_Patches
     private static void Start_Patch()
     {
         PortalSettingsManager.Initialize();
+        CustomPassHelper.ReplaceVanillaCustomPass();
     }
 
     [HarmonyPatch(nameof(StartOfRound.EndOfGame))]

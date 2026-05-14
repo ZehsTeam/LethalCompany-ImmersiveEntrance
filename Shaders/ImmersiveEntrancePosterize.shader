@@ -1,4 +1,9 @@
-Shader "FullScreen/SpongePosterizeNew"
+/**
+ * This Posterize shader is based off of the LethalSponge SpongePosterizeNew shader.
+ * https://github.com/CassCoffey/LethalSponge
+ * Licensed under MIT License by Scoops
+ */
+Shader "FullScreen/ImmersiveEntrancePosterize"
 {
     HLSLINCLUDE
 

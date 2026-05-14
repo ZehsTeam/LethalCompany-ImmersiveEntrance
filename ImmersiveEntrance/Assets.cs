@@ -50,7 +50,7 @@ internal static class Assets
         DoorPortalPrefab = LoadAsset<GameObject>("DoorPortal", assetBundle);
 
         // Shaders
-        PosterizeShader = LoadAsset<Shader>("SpongePosterizeNew", assetBundle);
+        PosterizeShader = LoadAsset<Shader>("ImmersiveEntrancePosterize", assetBundle);
 
         // EntranceDoorReplacements
         MansionEntranceDoorReplacement = LoadAsset<EntranceDoorReplacement>("MansionEntranceDoorReplacement", assetBundle);

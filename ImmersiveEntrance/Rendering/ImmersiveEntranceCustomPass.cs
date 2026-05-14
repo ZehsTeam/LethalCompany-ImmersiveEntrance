@@ -5,7 +5,12 @@ using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Rendering;
 
-public class SpongeCustomPass : CustomPass
+/**
+ * This CustomPass is based off of the LethalSponge SpongeCustomPass.
+ * https://github.com/CassCoffey/LethalSponge
+ * Licensed under MIT License by Scoops
+ */
+public class ImmersiveEntranceCustomPass : CustomPass
 {
     public static Material PosterizationMaterial;
     public static Shader PosterizationShader;
