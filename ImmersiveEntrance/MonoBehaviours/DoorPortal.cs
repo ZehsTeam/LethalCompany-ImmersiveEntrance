@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
@@ -71,6 +72,8 @@ public class DoorPortal : MonoBehaviour
     
     private void Start()
     {
+        InitializeVolumes();
+
         Utils.InvokeAfterDelay(InitializePivot, TimeSpan.FromSeconds(0.1f));
     }
 
@@ -132,6 +135,62 @@ public class DoorPortal : MonoBehaviour
 
         return true;
     }
+
+    // TODO: Make this work better. Sky on dark moons is not dark. Sky brightness doesn't change with time of day.
+    #region Volumes
+    private void InitializeVolumes()
+    {
+        if (TryFindGlobalVolumeByName("Sky and Fog Global Volume", out Volume globalSkyVolume))
+        {
+            CopyVolumeToPortalCamera(globalSkyVolume, priority: 20);
+        }
+    }
+
+    private Volume CopyVolumeToPortalCamera(Volume sourceVolume, int priority = 0)
+    {
+        if (sourceVolume == null)
+            return null;
+
+        GameObject volumeObj = Instantiate(sourceVolume.gameObject, _portalCamera.transform);
+        volumeObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+
+        volumeObj.layer = LayerMask.NameToLayer("NavigationSurface");
+
+        BoxCollider boxCollider = volumeObj.AddComponent<BoxCollider>();
+        boxCollider.size = Vector3.one * 0.1f;
+
+        Volume volume = volumeObj.GetComponent<Volume>();
+        volume.isGlobal = false;
+        volume.priority = priority;
+
+        return volume;
+    }
+
+    private bool TryFindGlobalVolumeByName(string name, out Volume globalVolume)
+    {
+        Volume[] volumes = FindObjectsByType<Volume>(FindObjectsSortMode.None);
+
+        foreach (var volume in volumes)
+        {
+            if (volume.gameObject.layer != 0)
+                continue;
+
+            if (!volume.isGlobal)
+                continue;
+
+            string volumeName = volume.gameObject.name;
+
+            if (volumeName.Equals(name))
+            {
+                globalVolume = volume;
+                return true;
+            }
+        }
+
+        globalVolume = null;
+        return false;
+    }
+    #endregion
 
     #region Screen Visibility
     private void UpdateScreenVisibility()
@@ -367,7 +426,7 @@ public class DoorPortal : MonoBehaviour
         }
         else
         {
-            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color;
+            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color; // TODO: This is not working correctly
         }
 
         CreateViewTexture();

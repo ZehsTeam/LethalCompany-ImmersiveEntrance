@@ -14,6 +14,9 @@ internal static class Assets
     // Prefabs
     public static GameObject DoorPortalPrefab { get; private set; }
 
+    // Shaders
+    public static Shader PosterizeShader { get; private set; }
+
     // EntranceDoorReplacements
     public static EntranceDoorReplacement MansionEntranceDoorReplacement { get; private set; }
     
@@ -45,6 +48,9 @@ internal static class Assets
     {
         // Prefabs
         DoorPortalPrefab = LoadAsset<GameObject>("DoorPortal", assetBundle);
+
+        // Shaders
+        PosterizeShader = LoadAsset<Shader>("SpongePosterizeNew", assetBundle);
 
         // EntranceDoorReplacements
         MansionEntranceDoorReplacement = LoadAsset<EntranceDoorReplacement>("MansionEntranceDoorReplacement", assetBundle);

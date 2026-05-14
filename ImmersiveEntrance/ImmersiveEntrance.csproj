@@ -48,6 +48,11 @@
   
   <ItemGroup>
     <None Include="..\README.md" Link="README.md" />
+    
+    <Content Include="..\Shaders\**\*.*">
+      <Link>Shaders\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   
   <!-- Dependencies -->
