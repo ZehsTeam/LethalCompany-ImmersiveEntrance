@@ -3,7 +3,7 @@
  * https://github.com/CassCoffey/LethalSponge
  * Licensed under MIT License by Scoops
  */
-Shader "FullScreen/ImmersiveEntrancePosterize"
+Shader "FullScreen/Posterize"
 {
     HLSLINCLUDE
 

@@ -11,12 +11,13 @@ namespace com.github.zehsteam.ImmersiveEntrance.Rendering;
  * https://github.com/CassCoffey/LethalSponge
  * Licensed under MIT License by Scoops
  */
-public class ImmersiveEntranceCustomPass : CustomPass
+public class PosterizationCustomPass : CustomPass
 {
     public static Material PosterizationMaterial;
     public static Shader PosterizationShader;
     public static RTHandle PosterizationRT;
 
+    // Exclusion Mask
     public static RTHandle ExclusionMaskRT;
 
     protected override void Setup(ScriptableRenderContext renderContext, CommandBuffer cmd)

@@ -3,6 +3,7 @@ using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
+using com.github.zehsteam.ImmersiveEntrance.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -420,6 +421,8 @@ public class DoorPortal : MonoBehaviour
 
         HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
 
+        portalCameraData.customRenderingSettings = true;
+
         if (_mainEntrance.IsOutside)
         {
             portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
@@ -582,7 +585,6 @@ public class DoorPortal : MonoBehaviour
         Transform thisScreen = _screen.transform;
 
         Matrix4x4 linkedFlipped = linkedScreen.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0f, 180f, 0f));
-
         Matrix4x4 relativeTransform = thisScreen.localToWorldMatrix * Matrix4x4.Inverse(linkedFlipped);
 
         _portalCamera.transform.SetPositionAndRotation(
@@ -590,7 +592,10 @@ public class DoorPortal : MonoBehaviour
             relativeTransform.rotation * playerCamera.transform.rotation
         );
 
-        SetObliqueNearClipPlane(playerCamera);
+        _portalCamera.fieldOfView = playerCamera.fieldOfView;
+
+        //SetObliqueNearClipPlane(playerCamera);
+        SetPortalClipPlane();
 
         LevelHelper.SetSunEnabled(_mainEntrance.IsOutside);
 
@@ -599,23 +604,33 @@ public class DoorPortal : MonoBehaviour
         LevelHelper.SetSunEnabled(!_mainEntrance.IsOutside);
     }
 
-    private void SetObliqueNearClipPlane(Camera playerCamera)
+    private void SetPortalClipPlane()
     {
         Transform screenTransform = _screen.transform;
 
-        var clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
-
-        var clipPlaneVec = new Vector4(
-            clipPlane.normal.x,
-            clipPlane.normal.y,
-            clipPlane.normal.z,
-            clipPlane.distance
-        );
-
-        Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
-
-        _portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+        PortalClipCustomPass.SetPortalPlane(_portalCamera, -screenTransform.forward, screenTransform.position);
     }
+
+    /*
+     * This makes fog look really weird because of a Unity HDRP bug with CalculateObliqueMatrix 
+     */
+    //private void SetObliqueNearClipPlane(Camera playerCamera)
+    //{
+    //    Transform screenTransform = _screen.transform;
+
+    //    var clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
+
+    //    var clipPlaneVec = new Vector4(
+    //        clipPlane.normal.x,
+    //        clipPlane.normal.y,
+    //        clipPlane.normal.z,
+    //        clipPlane.distance
+    //    );
+
+    //    Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
+
+    //    _portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+    //}
 
     public static bool TryGetRenderingInstance(out DoorPortal doorPortal)
     {

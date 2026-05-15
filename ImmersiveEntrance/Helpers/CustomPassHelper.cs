@@ -24,7 +24,7 @@ internal static class CustomPassHelper
         CustomPassVolume newPassVolume = NewVolume.AddComponent<CustomPassVolume>();
         newPassVolume.injectionPoint = CustomPassInjectionPoint.BeforeTransparent;
 
-        NewPass = new ImmersiveEntranceCustomPass();
+        NewPass = new PosterizationCustomPass();
 
         newPassVolume.customPasses.Add(NewPass);
 

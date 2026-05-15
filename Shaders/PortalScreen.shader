@@ -13,7 +13,7 @@ Shader "ImmersiveEntrance/PortalScreen"
         Tags
         {
             "RenderType" = "Opaque"
-            "Queue"      = "Geometry+1"
+            "Queue"      = "Geometry"
         }
 
         // Pass 1: Normal rendering pass, no LightMode so HDRP renders it as usual
