@@ -63,6 +63,9 @@ public class PosterizationCustomPass : CustomPass
         ctx.propertyBlock.SetFloat("_ColorStrength", 0.65f);
         ctx.propertyBlock.SetTexture("_ExclusionMaskBuffer", ExclusionMaskRT);
 
+        ctx.propertyBlock.SetFloat("_PlayerCameraNearClipPlane", 0.05f);
+        ctx.propertyBlock.SetFloat("_PlayerCameraFarClipPlane", 400f);
+
         bool useSimulatedDeviceDepth = ConfigManager.Debug_UseSimulatedDeviceDepth.Value;
         ctx.propertyBlock.SetInt("_UseSimulatedDeviceDepth", useSimulatedDeviceDepth ? 1 : 0);
 

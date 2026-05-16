@@ -24,6 +24,9 @@ Shader "FullScreen/Posterize"
     float _ColorCurve;
     float _ColorStrength;
 
+    float _PlayerCameraNearClipPlane;
+    float _PlayerCameraFarClipPlane;
+
     int _UseSimulatedDeviceDepth;
 
     float3 PreprocessColor(float3 initialColor) 
@@ -114,17 +117,17 @@ Shader "FullScreen/Posterize"
     {
         float2 pixelOffset = thickness * _ScreenParams.xy;
 
-        float near = 0.05;
-        float far = 400;
+        float near = _PlayerCameraNearClipPlane;
+        float far = _PlayerCameraFarClipPlane;
         
-	    float topleft = SimulatedDeviceDepth(coord + float2( -pixelOffset.x, pixelOffset.y), near, far);
-        float topmid = SimulatedDeviceDepth(coord + float2( 0.0, pixelOffset.y), near, far);
-        float topright = SimulatedDeviceDepth(coord + float2( pixelOffset.x, pixelOffset.y), near, far);
-        float midleft = SimulatedDeviceDepth(coord + float2( -pixelOffset.x, 0.0), near, far);
-        float midright = SimulatedDeviceDepth(coord + float2( pixelOffset.x, 0.0), near, far);
-        float bottomleft = SimulatedDeviceDepth(coord + float2( -pixelOffset.x, -pixelOffset.y), near, far);
-        float bottommid = SimulatedDeviceDepth(coord + float2( 0.0, -pixelOffset.y), near, far);
-        float bottomright = SimulatedDeviceDepth(coord + float2( pixelOffset.x, -pixelOffset.y), near, far);
+	    float topleft =     SimulatedDeviceDepth(coord + float2(-pixelOffset.x, pixelOffset.y),  near, far);
+        float topmid =      SimulatedDeviceDepth(coord + float2(0.0,            pixelOffset.y),  near, far);
+        float topright =    SimulatedDeviceDepth(coord + float2(pixelOffset.x,  pixelOffset.y),  near, far);
+        float midleft =     SimulatedDeviceDepth(coord + float2(-pixelOffset.x, 0.0),            near, far);
+        float midright =    SimulatedDeviceDepth(coord + float2(pixelOffset.x,  0.0),            near, far);
+        float bottomleft =  SimulatedDeviceDepth(coord + float2(-pixelOffset.x, -pixelOffset.y), near, far);
+        float bottommid =   SimulatedDeviceDepth(coord + float2(0.0,            -pixelOffset.y), near, far);
+        float bottomright = SimulatedDeviceDepth(coord + float2(pixelOffset.x,  -pixelOffset.y), near, far);
 
         float Gx = (topright + 2.0*midright + bottomright) - (topleft + 2.0*midleft + bottomleft);
         float Gy = (topleft + 2.0*topmid + topright) - (bottomleft + 2.0*bottommid + bottomright);
