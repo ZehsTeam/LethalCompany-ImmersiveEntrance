@@ -29,6 +29,7 @@ internal static class ConfigManager
     public static ConfigEntry<bool> Debug_ExcludeFogBehindScreen { get; private set; }
     public static ConfigEntry<float> Debug_MaxNearClipPlane { get; private set; }
     public static ConfigEntry<NearClipPlaneMode> Debug_NearClipPlaneMode { get; private set; }
+    public static ConfigEntry<bool> Debug_UseSimulatedDeviceDepth { get; private set; }
 
     public static void Initialize(ConfigFile configFile)
     {
@@ -76,6 +77,7 @@ internal static class ConfigManager
         Debug_MaxNearClipPlane = ConfigHelper.Bind("Debug", "MaxNearClipPlane", defaultValue: 1f,    "The max value portal cameras can have their near clip plane set to.",
             acceptableValues: new AcceptableValueRange<float>(0.01f, 10f));
         Debug_NearClipPlaneMode = ConfigHelper.Bind("Debug", "NearClipPlaneMode", defaultValue: NearClipPlaneMode.Normal, "The method the portal cameras use for calculating their near clip plane.");
+        Debug_UseSimulatedDeviceDepth = ConfigHelper.Bind("Debug", "UseSimulatedDeviceDepth", defaultValue: true, "");
 
         Debug_HideDoorObjects.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
         Debug_ExcludeFogBehindScreen.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();

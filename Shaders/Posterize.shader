@@ -24,6 +24,8 @@ Shader "FullScreen/Posterize"
     float _ColorCurve;
     float _ColorStrength;
 
+    int _UseSimulatedDeviceDepth;
+
     float3 PreprocessColor(float3 initialColor) 
     {
         // Bright Mask
@@ -92,18 +94,37 @@ Shader "FullScreen/Posterize"
         return max(r_mag, max(g_mag, b_mag));
     }
 
+    float SimulatedDeviceDepth(uint2 pixelCoords, float near, float far)
+    {
+        float deviceDepth = LoadCameraDepth(pixelCoords);
+
+        if (_UseSimulatedDeviceDepth == 0) {
+            return deviceDepth;
+        }
+
+        float2 positionNDC = (float2(pixelCoords) + 0.5) * _ScreenSize.zw;
+        float eyeDepth = LinearEyeDepth(positionNDC, deviceDepth, UNITY_MATRIX_I_P._m30_m31_m32_m33);
+
+        float num = near * (far - eyeDepth);
+        float den = eyeDepth * (far - near);
+        return num / den;
+    }
+
     float SobelOperator_Depth(float2 coord, float thickness)
     {
         float2 pixelOffset = thickness * _ScreenParams.xy;
 
-	    float topleft = LoadCameraDepth(coord + float2( -pixelOffset.x, pixelOffset.y));
-        float topmid = LoadCameraDepth(coord + float2( 0.0, pixelOffset.y));
-        float topright = LoadCameraDepth(coord + float2( pixelOffset.x, pixelOffset.y));
-        float midleft = LoadCameraDepth(coord + float2( -pixelOffset.x, 0.0));
-        float midright = LoadCameraDepth(coord + float2( pixelOffset.x, 0.0));
-        float bottomleft = LoadCameraDepth(coord + float2( -pixelOffset.x, -pixelOffset.y));
-        float bottommid = LoadCameraDepth(coord + float2( 0.0, -pixelOffset.y));
-        float bottomright = LoadCameraDepth(coord + float2( pixelOffset.x, -pixelOffset.y));
+        float near = 0.05;
+        float far = 400;
+        
+	    float topleft = SimulatedDeviceDepth(coord + float2( -pixelOffset.x, pixelOffset.y), near, far);
+        float topmid = SimulatedDeviceDepth(coord + float2( 0.0, pixelOffset.y), near, far);
+        float topright = SimulatedDeviceDepth(coord + float2( pixelOffset.x, pixelOffset.y), near, far);
+        float midleft = SimulatedDeviceDepth(coord + float2( -pixelOffset.x, 0.0), near, far);
+        float midright = SimulatedDeviceDepth(coord + float2( pixelOffset.x, 0.0), near, far);
+        float bottomleft = SimulatedDeviceDepth(coord + float2( -pixelOffset.x, -pixelOffset.y), near, far);
+        float bottommid = SimulatedDeviceDepth(coord + float2( 0.0, -pixelOffset.y), near, far);
+        float bottomright = SimulatedDeviceDepth(coord + float2( pixelOffset.x, -pixelOffset.y), near, far);
 
         float Gx = (topright + 2.0*midright + bottomright) - (topleft + 2.0*midleft + bottomleft);
         float Gy = (topleft + 2.0*topmid + topright) - (bottomleft + 2.0*bottommid + bottomright);
@@ -145,7 +166,7 @@ Shader "FullScreen/Posterize"
             return float4(baseColor, 1.0);
         }
 
-        // Early escape for excluded objects
+        // Early escape for excluded objects.
         float exclusionMask = LOAD_TEXTURE2D_X(_ExclusionMaskBuffer, cs).r;
         if (exclusionMask == 0.0) {
             return float4(baseColor, 1.0);
