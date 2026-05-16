@@ -18,7 +18,7 @@ internal static class CustomPassHelper
 
         CustomPassVolume oldPassVolume = OldVolume.GetComponent<CustomPassVolume>();
 
-        NewVolume = new GameObject("ImmersiveEntranceCustomPass");
+        NewVolume = new GameObject($"{MyPluginInfo.PLUGIN_NAME} CustomPass");
         NewVolume.transform.SetParent(renderingParent);
 
         CustomPassVolume newPassVolume = NewVolume.AddComponent<CustomPassVolume>();
