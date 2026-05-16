@@ -166,7 +166,7 @@
     <AssetBundleFileName>immersiveentrance_assets</AssetBundleFileName>
     <AssetBundleFolder>D:\LethalCompanyUnityProjects\LethalCompanyV81\Assets\LethalCompany\Mods\AssetBundles</AssetBundleFolder>
     
-    <GaleProfileName>Mod Development</GaleProfileName>
+    <GaleProfileName>ImmersiveEntrance - Development</GaleProfileName>
     
     <GaleDataFolder>$(AppData)\com.kesomannen.gale</GaleDataFolder>
     

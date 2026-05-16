@@ -6,7 +6,13 @@ internal static class LevelHelper
 {
     private static GameObject _environment;
 
-    public static void SetSunEnabled(bool value)
+    public static void SetSunAndSkyEnabledThisFrame(bool value)
+    {
+        SetSunEnabledThisFrame(value);
+        SetSkyEnabledThisFrame(value);
+    }
+
+    private static void SetSunEnabledThisFrame(bool value)
     {
         TimeOfDay timeOfDay = TimeOfDay.Instance;
 
@@ -16,6 +22,16 @@ internal static class LevelHelper
         timeOfDay.sunDirect?.enabled = value;
         timeOfDay.sunIndirect?.enabled = value;
         timeOfDay.indirectLightData?.lightDimmer = value ? 1f : 0f;
+    }
+
+    private static void SetSkyEnabledThisFrame(bool value)
+    {
+        StartOfRound startOfRound = StartOfRound.Instance;
+
+        if (startOfRound == null)
+            return;
+
+        startOfRound.blackSkyVolume?.weight = value ? 0f : 1f;
     }
 
     public static string GetCurrentMoonName()
