@@ -362,21 +362,6 @@ public class DoorPortal : MonoBehaviour
     #region Rendering
     private void InitializeCamera()
     {
-        if (_mainEntrance == null)
-            return;
-
-        HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
-        portalCameraData.customRenderingSettings = true;
-
-        if (_mainEntrance.IsOutside)
-        {
-            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Sky;
-        }
-        else
-        {
-            portalCameraData.clearColorMode = HDAdditionalCameraData.ClearColorMode.Color; // TODO: This is not working correctly
-        }
-
         CreateViewTexture();
     }
 
