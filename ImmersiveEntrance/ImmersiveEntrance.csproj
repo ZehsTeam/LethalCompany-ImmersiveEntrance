@@ -195,9 +195,9 @@
   </Target>
   
   <!-- Copy shaders to Unity project -->
-  <Target Name="CopyShadersToUnityProject" AfterTargets="PostBuildEvent">
+  <Target Name="CopyShadersToUnityProject" AfterTargets="PostBuildEvent" Condition="Exists('$(UnityProjectShadersFolder)')">
     <Message Text="Copying shaders to Unity project" Importance="high" />
-
+    
     <ItemGroup>
       <ShaderFiles Include="$(ProjectDir)..\Shaders\**\*.shader" />
     </ItemGroup>

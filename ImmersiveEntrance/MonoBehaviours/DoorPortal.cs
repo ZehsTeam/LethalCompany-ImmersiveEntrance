@@ -39,6 +39,9 @@ public class DoorPortal : MonoBehaviour
 
     [SerializeField]
     private Light _nightVision;
+
+    [SerializeField]
+    private GameObject _fogExclusionZone;
     #endregion
 
     private MainEntranceData _mainEntrance;
@@ -109,6 +112,8 @@ public class DoorPortal : MonoBehaviour
         
         InitializeScreen();
         InitializeCamera();
+
+        ApplyConfigSettings();
     }
 
     public void LinkPortal(DoorPortal other)
@@ -420,7 +425,6 @@ public class DoorPortal : MonoBehaviour
             return;
 
         HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
-
         portalCameraData.customRenderingSettings = true;
 
         if (_mainEntrance.IsOutside)
@@ -435,35 +439,25 @@ public class DoorPortal : MonoBehaviour
         CreateViewTexture();
     }
 
-    private void ApplyCameraViewDistance()
+    private void ApplyCameraConfigSettings()
     {
-        if (_mainEntrance == null)
-            return;
+        bool fogEnabled = ConfigManager.PortalGraphics_FogEnabled.Value;
+        bool customPassEnabled = ConfigManager.PortalGraphics_CustomPassEnabled.Value;
 
-        float farClipPlane;
+        HDAdditionalCameraData portalCameraData = _portalCamera.GetComponent<HDAdditionalCameraData>();
+        portalCameraData.customRenderingSettings = true;
 
-        if (_portalSettings.UseViewDistance.Value)
-        {
-            farClipPlane = _portalSettings.ViewDistance.Value;
-        }
-        else
-        {
-            if (_mainEntrance.IsOutside)
-            {
-                farClipPlane = ConfigManager.Portal_OutsideViewDistance.Value;
-            }
-            else
-            {
-                farClipPlane = ConfigManager.Portal_InsideViewDistance.Value;
-            }
-        }
+        FrameSettings settings = portalCameraData.renderingPathCustomFrameSettings;
 
-        _portalCamera.farClipPlane = farClipPlane;
+        settings.SetEnabled(FrameSettingsField.AtmosphericScattering, fogEnabled);
+        settings.SetEnabled(FrameSettingsField.CustomPass, customPassEnabled);
+
+        portalCameraData.renderingPathCustomFrameSettings = settings;
     }
 
     private Size GetTargetViewTextureSize()
     {
-        PixelResolutionType pixelResolution = ConfigManager.Portal_PixelResolution.Value;
+        PixelResolutionType pixelResolution = ConfigManager.PortalGraphics_PixelResolution.Value;
 
         if (pixelResolution == PixelResolutionType.PlayerCamera)
             return CameraHelper.GetCameraScreenSize();
@@ -551,11 +545,6 @@ public class DoorPortal : MonoBehaviour
         if (_mainEntrance == null)
             return;
 
-        if (value)
-        {
-            ApplyCameraViewDistance();
-        }
-
         UpdateNightVision();
         UpdateDoor();
     }
@@ -594,8 +583,8 @@ public class DoorPortal : MonoBehaviour
 
         _portalCamera.fieldOfView = playerCamera.fieldOfView;
 
-        //SetObliqueNearClipPlane(playerCamera);
-        SetPortalClipPlane();
+        SetFarClipPlane();
+        SetNearClipPlane();
 
         LevelHelper.SetSunEnabled(_mainEntrance.IsOutside);
 
@@ -604,33 +593,109 @@ public class DoorPortal : MonoBehaviour
         LevelHelper.SetSunEnabled(!_mainEntrance.IsOutside);
     }
 
+    private void SetFarClipPlane()
+    {
+        if (_mainEntrance == null)
+            return;
+
+        float farClipPlane;
+
+        if (_portalSettings.UseViewDistance.Value)
+        {
+            farClipPlane = _portalSettings.ViewDistance.Value;
+        }
+        else
+        {
+            if (_mainEntrance.IsOutside)
+            {
+                farClipPlane = ConfigManager.PortalGraphics_OutsideViewDistance.Value;
+            }
+            else
+            {
+                farClipPlane = ConfigManager.PortalGraphics_InsideViewDistance.Value;
+            }
+        }
+
+        float distanceFromScreen = Vector3.Distance(_portalCamera.transform.position, _screen.transform.position);
+
+        _portalCamera.farClipPlane = farClipPlane + distanceFromScreen;
+    }
+
+    private void SetNearClipPlane()
+    {
+        NearClipPlaneMode mode = ConfigManager.Debug_NearClipPlaneMode.Value;
+
+        if (mode == NearClipPlaneMode.ObliqueProjection)
+        {
+            SetObliqueNearClipPlane();
+            return;
+        }
+
+        SetNormalNearClipPlane();
+    }
+
+    private void SetNormalNearClipPlane()
+    {
+        Transform screenTransform = _screen.transform;
+
+        Vector3 localCameraPos = screenTransform.InverseTransformPoint(_portalCamera.transform.position);
+
+        MeshFilter meshFilter = _screen.GetComponent<MeshFilter>();
+        Bounds localBounds = meshFilter?.sharedMesh?.bounds ?? new Bounds(Vector3.zero, Vector3.one);
+
+        var closestLocalPoint = new Vector3(
+            Mathf.Clamp(localCameraPos.x, localBounds.min.x, localBounds.max.x),
+            Mathf.Clamp(localCameraPos.y, localBounds.min.y, localBounds.max.y),
+            0f
+        );
+
+        Vector3 closestWorldPoint = screenTransform.TransformPoint(closestLocalPoint);
+
+        float closestDistance = Vector3.Distance(_portalCamera.transform.position, closestWorldPoint);
+
+        float maxNearClipPlane = ConfigManager.Debug_MaxNearClipPlane.Value; // Default: 1f
+
+        _portalCamera.ResetProjectionMatrix();
+
+        // When near clip plane is set too high with Custom Pass enabled, floors and walls sometimes turn dark
+        _portalCamera.nearClipPlane = Mathf.Clamp(closestDistance, 0.01f, maxNearClipPlane);
+    }
+
+    /*
+     * This makes fog look really weird because of a Unity HDRP bug with CalculateObliqueMatrix
+     * This also makes the ground and walls turn dark at some distances when Custom Pass is enabled
+     */
+    private void SetObliqueNearClipPlane()
+    {
+        if (!PlayerUtils.TryGetLocalPlayerCamera(out Camera playerCamera))
+            return;
+
+        Transform screenTransform = _screen.transform;
+
+        var clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
+
+        var clipPlaneVec = new Vector4(
+            clipPlane.normal.x,
+            clipPlane.normal.y,
+            clipPlane.normal.z,
+            clipPlane.distance
+        );
+
+        Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
+
+        _portalCamera.nearClipPlane = 0.01f;
+        _portalCamera.projectionMatrix = _portalCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
+    }
+
+    /*
+     * PortalClip shader isn't finished yet!
+     */
     private void SetPortalClipPlane()
     {
         Transform screenTransform = _screen.transform;
 
         PortalClipCustomPass.SetPortalPlane(_portalCamera, -screenTransform.forward, screenTransform.position);
     }
-
-    /*
-     * This makes fog look really weird because of a Unity HDRP bug with CalculateObliqueMatrix 
-     */
-    //private void SetObliqueNearClipPlane(Camera playerCamera)
-    //{
-    //    Transform screenTransform = _screen.transform;
-
-    //    var clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
-
-    //    var clipPlaneVec = new Vector4(
-    //        clipPlane.normal.x,
-    //        clipPlane.normal.y,
-    //        clipPlane.normal.z,
-    //        clipPlane.distance
-    //    );
-
-    //    Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
-
-    //    _portalCamera.projectionMatrix = playerCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
-    //}
 
     public static bool TryGetRenderingInstance(out DoorPortal doorPortal)
     {
@@ -668,7 +733,12 @@ public class DoorPortal : MonoBehaviour
     #region Config
     private void ApplyConfigSettings()
     {
-        ApplyCameraViewDistance();
+        ApplyCameraConfigSettings();
+
+        UpdateDoor();
+
+        bool excludeFogBehindScreen = ConfigManager.Debug_ExcludeFogBehindScreen.Value;
+        _fogExclusionZone?.SetActive(excludeFogBehindScreen);
     }
 
     public static void OnConfigSettingsChanged()
