@@ -88,22 +88,37 @@ Shader "ImmersiveEntrance/PortalScreen"
             struct Attributes
             {
                 float4 positionOS : POSITION;
+                float2 uv         : TEXCOORD0;
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                float2 uv         : TEXCOORD1;
             };
+
+            float _CropLeft;
+            float _CropRight;
+            float _CropTop;
+            float _CropBottom;
 
             Varyings vert(Attributes IN)
             {
                 Varyings OUT;
                 OUT.positionCS = UnityObjectToClipPos(IN.positionOS);
+                OUT.uv         = IN.uv;
                 return OUT;
             }
 
             float4 frag(Varyings IN) : SV_Target
             {
+                float2 uv = IN.uv;
+
+                clip(uv.x - _CropLeft);
+                clip(uv.y - _CropBottom);
+                clip((1.0 - uv.x) - _CropRight);
+                clip((1.0 - uv.y) - _CropTop);
+
                 return float4(0, 0, 0, 1); // Black = excluded
             }
             ENDHLSL
