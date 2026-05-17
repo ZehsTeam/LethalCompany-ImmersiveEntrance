@@ -191,12 +191,25 @@ public class DoorPortal : MonoBehaviour
         {
             InteriorHelper.RenderInterior();
         }
+        else
+        {
+            LevelHelper.SetForceWeatherEffectsEnabled(true);
+        }
     }
 
     private void OnLocalPlayerExitRange()
     {
         SetDrawing(false);
         _linkedPortal.SetRendering(false);
+
+        if (_mainEntrance.IsOutside)
+        {
+            
+        }
+        else
+        {
+            LevelHelper.SetForceWeatherEffectsEnabled(false);
+        }
     }
     #endregion
 

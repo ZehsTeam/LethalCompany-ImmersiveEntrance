@@ -21,6 +21,7 @@ internal static class StartOfRound_Patches
     private static void EndOfGame_Patch()
     {
         EntranceManager.Reset();
+        LevelHelper.Reset();
     }
 
     [HarmonyPatch(nameof(StartOfRound.OnLocalDisconnect))]
@@ -28,5 +29,6 @@ internal static class StartOfRound_Patches
     private static void OnLocalDisconnect_Patch()
     {
         EntranceManager.Reset();
+        LevelHelper.Reset();
     }
 }

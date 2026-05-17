@@ -202,14 +202,9 @@
       <ShaderFiles Include="$(ProjectDir)..\Shaders\**\*.shader" />
     </ItemGroup>
     
-    <Copy
-      SourceFiles="@(ShaderFiles)"
-      DestinationFiles="@(ShaderFiles->'$(UnityProjectShadersFolder)\%(RecursiveDir)%(Filename)%(Extension)')"
-      OverwriteReadOnlyFiles="true"
-      SkipUnchangedFiles="true"
-      />
+    <Copy SourceFiles="@(ShaderFiles)" DestinationFiles="@(ShaderFiles->'$(UnityProjectShadersFolder)\%(RecursiveDir)%(Filename)%(Extension)')" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     
-    <Message Text="Copied @(ShaderFiles->Count()) shader(s) to $(UnityProjectShadersFolder)" Importance="high" />
+    <Message Text="Copied @(ShaderFiles-&gt;Count()) shader(s) to $(UnityProjectShadersFolder)" Importance="high" />
     <Message Text="$(ProjectDir)" Importance="high" />
   </Target>
   
