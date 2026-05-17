@@ -609,16 +609,6 @@ public class DoorPortal : MonoBehaviour
         _portalCamera.projectionMatrix = _portalCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
     }
 
-    /*
-     * PortalClip shader isn't finished yet!
-     */
-    private void SetPortalClipPlane()
-    {
-        Transform screenTransform = _screen.transform;
-
-        PortalClipCustomPass.SetPortalPlane(_portalCamera, -screenTransform.forward, screenTransform.position);
-    }
-
     public static bool TryGetRenderingInstance(out DoorPortal doorPortal)
     {
         doorPortal = _instances.FirstOrDefault(x => x.IsRendering());

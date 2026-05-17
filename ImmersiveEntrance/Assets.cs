@@ -16,7 +16,6 @@ internal static class Assets
 
     // Shaders
     public static Shader PosterizeShader { get; private set; }
-    public static Shader PortalClipShader { get; private set; }
 
     // EntranceDoorReplacements
     public static EntranceDoorReplacement MansionEntranceDoorReplacement { get; private set; }
@@ -52,7 +51,6 @@ internal static class Assets
 
         // Shaders
         PosterizeShader = LoadAsset<Shader>("Posterize", assetBundle);
-        PortalClipShader = LoadAsset<Shader>("PortalClip", assetBundle);
 
         // EntranceDoorReplacements
         MansionEntranceDoorReplacement = LoadAsset<EntranceDoorReplacement>("MansionEntranceDoorReplacement", assetBundle);
