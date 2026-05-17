@@ -3,7 +3,6 @@ using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
 using com.github.zehsteam.ImmersiveEntrance.Objects.PortalSettingTypes;
-using com.github.zehsteam.ImmersiveEntrance.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -21,6 +20,7 @@ public class DoorPortal : MonoBehaviour
     public Camera PortalCamera => _portalCamera;
 
     #region Unity Editor
+    #pragma warning disable CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
     [SerializeField]
     private Transform _pivot;
 
@@ -41,6 +41,7 @@ public class DoorPortal : MonoBehaviour
 
     [SerializeField]
     private GameObject _fogExclusionZone;
+    #pragma warning restore CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
     #endregion
 
     private MainEntranceData _mainEntrance;
