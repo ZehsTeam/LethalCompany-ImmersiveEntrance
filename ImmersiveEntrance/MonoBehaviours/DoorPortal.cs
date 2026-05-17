@@ -557,10 +557,10 @@ public class DoorPortal : MonoBehaviour
             return;
         }
 
-        SetNormalNearClipPlane();
+        SetDefaultNearClipPlane();
     }
 
-    private void SetNormalNearClipPlane()
+    private void SetDefaultNearClipPlane()
     {
         Transform screenTransform = _screen.transform;
 
@@ -577,25 +577,21 @@ public class DoorPortal : MonoBehaviour
 
         Vector3 closestWorldPoint = screenTransform.TransformPoint(closestLocalPoint);
 
-        float closestDistance = Vector3.Distance(_portalCamera.transform.position, closestWorldPoint);
-
-        float maxNearClipPlane = ConfigManager.Debug_MaxNearClipPlane.Value; // Default: 1f
+        // Project the vector from the portal camera to the closest point onto the
+        // camera's forward axis — this gives the depth the near plane must be at
+        // to not clip past the closest point at any angle
+        Vector3 toClosest = closestWorldPoint - _portalCamera.transform.position;
+        float projectedDistance = Vector3.Dot(toClosest, _portalCamera.transform.forward);
 
         _portalCamera.ResetProjectionMatrix();
-
-        // When near clip plane is set too high with Custom Pass enabled, floors and walls sometimes turn dark
-        _portalCamera.nearClipPlane = Mathf.Clamp(closestDistance, 0.01f, maxNearClipPlane);
+        _portalCamera.nearClipPlane = Mathf.Max(0.01f, projectedDistance);
     }
 
     /*
      * This makes fog look really weird because of a Unity HDRP bug with CalculateObliqueMatrix
-     * This also makes the ground and walls turn dark at some distances when Custom Pass is enabled
      */
     private void SetObliqueNearClipPlane()
     {
-        if (!PlayerUtils.TryGetLocalPlayerCamera(out Camera playerCamera))
-            return;
-
         Transform screenTransform = _screen.transform;
 
         var clipPlane = new Plane(-screenTransform.forward, screenTransform.position);
@@ -606,10 +602,10 @@ public class DoorPortal : MonoBehaviour
             clipPlane.normal.z,
             clipPlane.distance
         );
-
+        
         Vector4 clipPlaneCameraSpace = Matrix4x4.Transpose(Matrix4x4.Inverse(_portalCamera.worldToCameraMatrix)) * clipPlaneVec;
 
-        _portalCamera.nearClipPlane = 0.01f;
+        _portalCamera.nearClipPlane = 0.05f;
         _portalCamera.projectionMatrix = _portalCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
     }
 

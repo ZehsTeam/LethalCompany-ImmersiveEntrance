@@ -2,6 +2,6 @@
 
 public enum NearClipPlaneMode
 {
-    Normal,
+    Default,
     ObliqueProjection
 }
