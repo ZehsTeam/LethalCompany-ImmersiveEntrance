@@ -17,8 +17,6 @@ public class DoorPortal : MonoBehaviour
 {
     private static readonly List<DoorPortal> _instances = [];
 
-    public Camera PortalCamera => _portalCamera;
-
     #region Unity Editor
     #pragma warning disable CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
     [SerializeField]
@@ -44,9 +42,12 @@ public class DoorPortal : MonoBehaviour
     #pragma warning restore CS0649 // Field 'field' is never assigned to, and will always have its default value 'value'
     #endregion
 
-    private MainEntranceData _mainEntrance;
-    private PortalSettings _portalSettings;
-    private DoorPortal _linkedPortal;
+    public Camera PortalCamera => _portalCamera;
+    public bool IsOutside => MainEntrance.IsOutside;
+
+    public MainEntranceData MainEntrance { get; private set; }
+    public PortalSettings PortalSettings { get; private set; }
+    public DoorPortal LinkedPortal { get; private set; }
     
     private RenderTexture _viewTexture;
     private bool _isDrawing;
@@ -73,15 +74,10 @@ public class DoorPortal : MonoBehaviour
     {
         _instances.Remove(this);
     }
-    
-    private void Start()
-    {
-        Utils.InvokeAfterDelay(InitializePivot, TimeSpan.FromSeconds(0.1f));
-    }
 
     private void Update()
     {
-        if (_linkedPortal == null)
+        if (LinkedPortal == null)
             return;
 
         UpdateScreenVisibility();
@@ -89,7 +85,7 @@ public class DoorPortal : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (_linkedPortal == null)
+        if (LinkedPortal == null)
             return;
 
         UpdatePortalCamera();
@@ -97,17 +93,31 @@ public class DoorPortal : MonoBehaviour
 
     public void SetMainEntranceData(MainEntranceData mainEntrance)
     {
-        _mainEntrance = mainEntrance;
+        MainEntrance = mainEntrance;
+
+        if (mainEntrance == null)
+        {
+            Logger.LogError($"[{nameof(DoorPortal)}] {nameof(SetMainEntranceData)}: MainEntranceData is null!");
+            return;
+        }
 
         if (mainEntrance.IsOutside)
         {
-            _portalSettings = PortalSettingsManager.MoonDatabase.GetEntryForCurrentMoon();
+            PortalSettings = PortalSettingsManager.MoonDatabase.GetEntryForCurrentMoon();
         }
         else
         {
-            _portalSettings = PortalSettingsManager.InteriorDatabase.GetEntryForCurrentInterior();
+            PortalSettings = PortalSettingsManager.InteriorDatabase.GetEntryForCurrentInterior();
         }
-        
+
+        if (PortalSettings == null)
+        {
+            Logger.LogError($"[{nameof(DoorPortal)}] {nameof(SetMainEntranceData)}: PortalSettings is null!");
+            return;
+        }
+
+        Utils.InvokeAfterDelay(InitializePivot, TimeSpan.FromSeconds(0.1f));
+
         InitializeScreen();
         InitializeCamera();
 
@@ -116,11 +126,11 @@ public class DoorPortal : MonoBehaviour
 
     public void LinkPortal(DoorPortal other)
     {
-        _linkedPortal = other;
+        LinkedPortal = other;
 
         SetScreenRenderTexture(other._viewTexture);
 
-        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked portal {_mainEntrance.EntranceTeleport.GetLogInfo()} -> {other._mainEntrance.EntranceTeleport.GetLogInfo()}");
+        Logger.LogInfo($"[{nameof(DoorPortal)}] Linked portal {MainEntrance.EntranceTeleport.GetLogInfo()} -> {other.MainEntrance.EntranceTeleport.GetLogInfo()}");
     }
 
     public bool IsEnabled()
@@ -128,13 +138,13 @@ public class DoorPortal : MonoBehaviour
         if (!ConfigManager.Portal_Enabled.Value)
             return false;
 
-        if (_portalSettings == null || _linkedPortal == null)
+        if (PortalSettings == null || LinkedPortal == null)
             return false;
 
-        if (!_portalSettings.Enabled.Value)
+        if (!PortalSettings.Enabled.Value)
             return false;
 
-        if (!_linkedPortal._portalSettings.Enabled.Value)
+        if (!LinkedPortal.PortalSettings.Enabled.Value)
             return false;
 
         return true;
@@ -185,9 +195,9 @@ public class DoorPortal : MonoBehaviour
     private void OnLocalPlayerEnterRange()
     {
         SetDrawing(true);
-        _linkedPortal.SetRendering(true);
+        LinkedPortal.SetRendering(true);
 
-        if (_mainEntrance.IsOutside)
+        if (MainEntrance.IsOutside)
         {
             InteriorHelper.RenderInterior();
         }
@@ -200,9 +210,9 @@ public class DoorPortal : MonoBehaviour
     private void OnLocalPlayerExitRange()
     {
         SetDrawing(false);
-        _linkedPortal.SetRendering(false);
+        LinkedPortal.SetRendering(false);
 
-        if (_mainEntrance.IsOutside)
+        if (MainEntrance.IsOutside)
         {
             
         }
@@ -216,7 +226,7 @@ public class DoorPortal : MonoBehaviour
     #region Pivot
     private void InitializePivot()
     {
-        InitializePivot(_portalSettings.UseDynamicPivot, _portalSettings.PivotPositionOffset, _portalSettings.PivotRotationOffset);
+        InitializePivot(PortalSettings.UseDynamicPivot, PortalSettings.PivotPositionOffset, PortalSettings.PivotRotationOffset);
     }
 
     public void InitializePivot(bool useDynamicPivot, Vector3 positionOffset, Vector3 rotationOffset)
@@ -315,7 +325,7 @@ public class DoorPortal : MonoBehaviour
 
     private void ApplyScreenCrop()
     {
-        SetScreenCrop(_portalSettings.ScreenCrop);
+        SetScreenCrop(PortalSettings.ScreenCrop);
     }
 
     // This is here to enable testing this in UnityExplorer
@@ -470,7 +480,7 @@ public class DoorPortal : MonoBehaviour
 
         _portalCamera.targetTexture = _viewTexture;
 
-        _linkedPortal?.SetScreenRenderTexture(_viewTexture);
+        LinkedPortal?.SetScreenRenderTexture(_viewTexture);
     }
 
     private bool IsRendering()
@@ -482,7 +492,7 @@ public class DoorPortal : MonoBehaviour
     {
         _renderingContainer.SetActive(value);
 
-        if (_mainEntrance == null)
+        if (MainEntrance == null)
             return;
 
         UpdateNightVision();
@@ -491,10 +501,10 @@ public class DoorPortal : MonoBehaviour
 
     private void UpdateNightVision()
     {
-        if (_mainEntrance == null)
+        if (MainEntrance == null)
             return;
 
-        if (_mainEntrance.IsOutside)
+        if (MainEntrance.IsOutside)
             return;
 
         _nightVision.enabled = IsRendering();
@@ -510,7 +520,7 @@ public class DoorPortal : MonoBehaviour
 
         CreateViewTexture(); // Will create a new render texture if the screen size has changed
 
-        Transform linkedScreen = _linkedPortal._screen.transform;
+        Transform linkedScreen = LinkedPortal._screen.transform;
         Transform thisScreen = _screen.transform;
 
         Matrix4x4 linkedFlipped = linkedScreen.localToWorldMatrix * Matrix4x4.Rotate(Quaternion.Euler(0f, 180f, 0f));
@@ -526,27 +536,27 @@ public class DoorPortal : MonoBehaviour
         SetFarClipPlane();
         SetNearClipPlane();
 
-        LevelHelper.SetSunAndSkyEnabledThisFrame(_mainEntrance.IsOutside);
+        LevelHelper.SetSunAndSkyEnabledThisFrame(MainEntrance.IsOutside);
 
         _portalCamera.Render();
 
-        LevelHelper.SetSunAndSkyEnabledThisFrame(!_mainEntrance.IsOutside);
+        LevelHelper.SetSunAndSkyEnabledThisFrame(!MainEntrance.IsOutside);
     }
 
     private void SetFarClipPlane()
     {
-        if (_mainEntrance == null)
+        if (MainEntrance == null)
             return;
 
         float farClipPlane;
 
-        if (_portalSettings.UseViewDistance.Value)
+        if (PortalSettings.UseViewDistance.Value)
         {
-            farClipPlane = _portalSettings.ViewDistance.Value;
+            farClipPlane = PortalSettings.ViewDistance.Value;
         }
         else
         {
-            if (_mainEntrance.IsOutside)
+            if (MainEntrance.IsOutside)
             {
                 farClipPlane = ConfigManager.PortalGraphics_OutsideViewDistance.Value;
             }
@@ -632,27 +642,27 @@ public class DoorPortal : MonoBehaviour
 
     private void UpdateDoor()
     {
-        if (_mainEntrance == null)
+        if (MainEntrance == null)
             return;
 
         if (IsRendering())
         {
-            _mainEntrance.EntranceObjects.ViewBlocker.SetActive(false);
+            MainEntrance.EntranceObjects.ViewBlocker.SetActive(false);
         }
         else
         {
-            _mainEntrance.EntranceObjects.ViewBlocker.SetActive(!_isDrawing);
+            MainEntrance.EntranceObjects.ViewBlocker.SetActive(!_isDrawing);
         }
 
         bool hideDoorObjects = ConfigManager.Debug_HideDoorObjects.Value;
 
         if (hideDoorObjects)
         {
-            _mainEntrance.EntranceObjects.SetObjectsEnabled(false);
+            MainEntrance.EntranceObjects.SetObjectsEnabled(false);
         }
         else
         {
-            _mainEntrance.EntranceObjects.SetObjectsEnabled(!IsRendering());
+            MainEntrance.EntranceObjects.SetObjectsEnabled(!IsRendering());
         }
     }
 

@@ -22,6 +22,7 @@ internal static class ConfigManager
     public static ConfigEntry<float> PortalGraphics_OutsideViewDistance { get; private set; }
     public static ConfigEntry<float> PortalGraphics_InsideViewDistance { get; private set; }
     public static ConfigEntry<bool> PortalGraphics_FogEnabled { get; private set; }
+    public static ConfigEntry<bool> PortalGraphics_WeatherEffectsEnabled { get; private set; }
     public static ConfigEntry<bool> PortalGraphics_CustomPassEnabled { get; private set; }
 
     // Debug
@@ -57,13 +58,14 @@ internal static class ConfigManager
         descriptionBuilder.AppendLine("UltraPerformance = 400x260.");
         descriptionBuilder.AppendLine("Retro = 186x104.");
 
-        PortalGraphics_PixelResolution =     ConfigHelper.Bind("Portal Graphics", "PixelResolution",     defaultValue: PixelResolutionType.PlayerCamera, descriptionBuilder.ToString());
-        PortalGraphics_OutsideViewDistance = ConfigHelper.Bind("Portal Graphics", "OutsideViewDistance", defaultValue: 250f, "The distance you can see through an outside portal.",
+        PortalGraphics_PixelResolution =       ConfigHelper.Bind("Portal Graphics", "PixelResolution",       defaultValue: PixelResolutionType.PlayerCamera, descriptionBuilder.ToString());
+        PortalGraphics_OutsideViewDistance =   ConfigHelper.Bind("Portal Graphics", "OutsideViewDistance",   defaultValue: 250f, "The distance you can see through an outside portal.",
             acceptableValues: new AcceptableValueRange<float>(0.06f, 250f));
-        PortalGraphics_InsideViewDistance =  ConfigHelper.Bind("Portal Graphics", "InsideViewDistance",  defaultValue: 50f,  "The distance you can see through an inside portal.",
+        PortalGraphics_InsideViewDistance =    ConfigHelper.Bind("Portal Graphics", "InsideViewDistance",    defaultValue: 50f,  "The distance you can see through an inside portal.",
             acceptableValues: new AcceptableValueRange<float>(0.06f, 100f));
-        PortalGraphics_FogEnabled =          ConfigHelper.Bind("Portal Graphics", "FogEnabled",          defaultValue: true, "Enable the rendering of fog.");
-        PortalGraphics_CustomPassEnabled =   ConfigHelper.Bind("Portal Graphics", "CustomPassEnabled",   defaultValue: true, "Enable custom passes to render. This applies the Lethal Company signature shading to everything being viewed.");
+        PortalGraphics_FogEnabled =            ConfigHelper.Bind("Portal Graphics", "FogEnabled",            defaultValue: true, "Enable the rendering of fog.");
+        PortalGraphics_WeatherEffectsEnabled = ConfigHelper.Bind("Portal Graphics", "WeatherEffectsEnabled", defaultValue: true, "Enable the rendering of weather effects.");
+        PortalGraphics_CustomPassEnabled =     ConfigHelper.Bind("Portal Graphics", "CustomPassEnabled",     defaultValue: true, "Enable custom passes to render. This applies the Lethal Company signature shading to everything being viewed.");
 
         PortalGraphics_OutsideViewDistance.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();
         PortalGraphics_InsideViewDistance.SettingChanged += (_, _) => DoorPortal.OnConfigSettingsChanged();

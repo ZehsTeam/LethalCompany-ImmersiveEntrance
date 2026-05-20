@@ -1,6 +1,8 @@
 ﻿using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
+using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
 using HarmonyLib;
+using UnityEngine;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Patches;
 
@@ -30,5 +32,19 @@ internal static class StartOfRound_Patches
     {
         EntranceManager.Reset();
         LevelHelper.Reset();
+    }
+
+    // Hopefully this will help with CullFactory compatibility? Not too sure
+    [HarmonyPatch(nameof(StartOfRound.SetOcclusionCullerToPosition))]
+    [HarmonyPrefix]
+    private static void SetOcclusionCullerToPosition_Patch(ref Vector3 setToPosition)
+    {
+        if (!DoorPortal.TryGetRenderingInstance(out DoorPortal doorPortal))
+            return;
+
+        if (doorPortal.IsOutside)
+            return;
+
+        setToPosition = doorPortal.transform.position;
     }
 }

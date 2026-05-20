@@ -1,6 +1,7 @@
 ﻿using com.github.zehsteam.ImmersiveEntrance.Extensions;
 using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Helpers.IL;
+using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
 using HarmonyLib;
 using System.Collections.Generic;
@@ -31,6 +32,9 @@ internal static class TimeOfDay_Patches
     [HarmonyPrefix]
     private static void SetWeatherEffects_Patch(TimeOfDay __instance)
     {
+        if (!ConfigManager.PortalGraphics_WeatherEffectsEnabled.Value)
+            return;
+
         if (LevelHelper.IsForceWeatherEffectsEnabled)
         {
             __instance.SetCurrentLevelWeatherEnabled(true);
