@@ -157,6 +157,7 @@
   <!-- Mod Dependencies -->
   <ItemGroup>
     <Reference Include="LethalConfig" HintPath="$(BepInExPluginsFolder)\AinaVT-LethalConfig\LethalConfig\LethalConfig.dll" />
+    <Reference Include="CullFactory" HintPath="$(BepInExPluginsFolder)\fumiko-CullFactory\CullFactory.dll" />
   </ItemGroup>
   
   <!-- Settings -->

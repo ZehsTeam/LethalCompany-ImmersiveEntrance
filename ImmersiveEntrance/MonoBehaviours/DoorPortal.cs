@@ -1,4 +1,5 @@
-﻿using com.github.zehsteam.ImmersiveEntrance.Extensions;
+﻿using com.github.zehsteam.ImmersiveEntrance.Dependencies.CullFactoryMod;
+using com.github.zehsteam.ImmersiveEntrance.Extensions;
 using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
@@ -199,6 +200,11 @@ public class DoorPortal : MonoBehaviour
 
         if (MainEntrance.IsOutside)
         {
+            if (CullFactoryProxy.IsInstalled)
+            {
+                CullFactoryProxy.DisableCullFactory();
+            }
+
             InteriorHelper.RenderInterior();
         }
         else
@@ -214,7 +220,10 @@ public class DoorPortal : MonoBehaviour
 
         if (MainEntrance.IsOutside)
         {
-            
+            if (CullFactoryProxy.IsInstalled)
+            {
+                CullFactoryProxy.EnableCullFactory();
+            }
         }
         else
         {
