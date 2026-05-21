@@ -1,4 +1,9 @@
-# v1.1.0
+# v1.1.1
+
+- Improved CullFactory compatibility.
+- Fixed the portal screen alignment on the moon March.
+
+## v1.1.0
 
 - Improved portal view visuals to be almost 1:1 with the player camera.
 - The sky now renders properly and with correct lighting.
