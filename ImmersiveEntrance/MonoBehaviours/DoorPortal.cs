@@ -76,6 +76,14 @@ public class DoorPortal : MonoBehaviour
         _instances.Remove(this);
     }
 
+    private void Start()
+    {
+        if (CullFactoryProxy.IsInstalled)
+        {
+            CullFactoryProxy.DisableCullingForCamera(_portalCamera);
+        }
+    }
+
     private void Update()
     {
         if (LinkedPortal == null)
@@ -200,11 +208,6 @@ public class DoorPortal : MonoBehaviour
 
         if (MainEntrance.IsOutside)
         {
-            if (CullFactoryProxy.IsInstalled)
-            {
-                CullFactoryProxy.DisableCullFactory();
-            }
-
             InteriorHelper.RenderInterior();
         }
         else
@@ -220,10 +223,7 @@ public class DoorPortal : MonoBehaviour
 
         if (MainEntrance.IsOutside)
         {
-            if (CullFactoryProxy.IsInstalled)
-            {
-                CullFactoryProxy.EnableCullFactory();
-            }
+
         }
         else
         {

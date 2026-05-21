@@ -49,6 +49,16 @@ internal static class PortalSettingsManager
         ));
 
         _predefinedMoonDatabase.AddEntry(new MoonPortalSettings(
+            planetName: "61 March",
+            new PortalSettings.DefaultValues(
+                useDynamicPivot: false,
+                pivotPositionOffset: new Vector3(0.063f, 0.081f, 0.209f),
+                pivotRotationOffset: new Vector3(0f, -0.017f, 0f),
+                screenCrop: new Padding(left: 0f, right: 0f, top: 0.03f, bottom: 0f)
+            )
+        ));
+
+        _predefinedMoonDatabase.AddEntry(new MoonPortalSettings(
             planetName: "85 Rend",
             new PortalSettings.DefaultValues(
                 viewDistance: 75f

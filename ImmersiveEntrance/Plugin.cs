@@ -29,11 +29,6 @@ internal class Plugin : BaseUnityPlugin
         _harmony.PatchAll(typeof(MatchLocalPlayerPosition_Patches));
         _harmony.PatchAll(typeof(EntranceTeleport_Patches));
 
-        if (CullFactoryProxy.IsInstalled)
-        {
-            CullFactoryProxy.PatchAll(_harmony);
-        }
-
         Assets.Load();
 
         ConfigManager.Initialize(Config);

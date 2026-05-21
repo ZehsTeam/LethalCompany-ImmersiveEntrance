@@ -35,16 +35,16 @@ internal static class StartOfRound_Patches
     }
 
     // Hopefully this will help with CullFactory compatibility? Not too sure
-    [HarmonyPatch(nameof(StartOfRound.SetOcclusionCullerToPosition))]
-    [HarmonyPrefix]
-    private static void SetOcclusionCullerToPosition_Patch(ref Vector3 setToPosition)
-    {
-        if (!DoorPortal.TryGetRenderingInstance(out DoorPortal doorPortal))
-            return;
+    //[HarmonyPatch(nameof(StartOfRound.SetOcclusionCullerToPosition))]
+    //[HarmonyPrefix]
+    //private static void SetOcclusionCullerToPosition_Patch(ref Vector3 setToPosition)
+    //{
+    //    if (!DoorPortal.TryGetRenderingInstance(out DoorPortal doorPortal))
+    //        return;
 
-        if (doorPortal.IsOutside)
-            return;
+    //    if (doorPortal.IsOutside)
+    //        return;
 
-        setToPosition = doorPortal.transform.position;
-    }
+    //    setToPosition = doorPortal.transform.position;
+    //}
 }

@@ -1,5 +1,4 @@
 ﻿using BepInEx.Configuration;
-using com.github.zehsteam.ImmersiveEntrance.Dependencies.CullFactoryMod;
 using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
 using com.github.zehsteam.ImmersiveEntrance.Objects;
@@ -17,7 +16,6 @@ internal static class ConfigManager
     // Portal
     public static ConfigEntry<bool> Portal_Enabled { get; private set; }
     public static ConfigEntry<float> Portal_ActivationRange { get; private set; }
-    public static ConfigEntry<bool> Portal_OverrideCullFactory { get; private set; }
 
     // Portal Graphics
     public static ConfigEntry<PixelResolutionType> PortalGraphics_PixelResolution { get; private set; }
@@ -50,11 +48,6 @@ internal static class ConfigManager
         Portal_Enabled =         ConfigHelper.Bind("Portal", "Enabled",         defaultValue: true, "Enable portals!");
         Portal_ActivationRange = ConfigHelper.Bind("Portal", "ActivationRange", defaultValue: 10f,  "The distance in meters the player needs to be within a portal for it to render.",
             acceptableValues: new AcceptableValueRange<float>(1f, 50f));
-        
-        if (CullFactoryProxy.IsInstalled)
-        {
-            Portal_OverrideCullFactory = ConfigHelper.Bind("Portal", "OverrideCullFactory", defaultValue: true, "If enabled, will temporarily disable the CullFactory mod when the interior is being rendered by a portal camera.");
-        }
 
         // Portal Graphics
         var descriptionBuilder = new StringBuilder();
