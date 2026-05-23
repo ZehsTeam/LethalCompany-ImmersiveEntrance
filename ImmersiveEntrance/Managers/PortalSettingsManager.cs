@@ -81,7 +81,7 @@ internal static class PortalSettingsManager
             new InteriorPortalSettings.InteriorDefaultValues(),
             new PortalSettings.DefaultValues(
                 useDynamicPivot: false,
-                pivotPositionOffset: new Vector3(-0.1f, 0.03f, 0.067f) // GET Y POS AGAIN
+                pivotPositionOffset: new Vector3(-0.1f, 0.03f, 0.067f)
             )
         ));
 
@@ -101,7 +101,7 @@ internal static class PortalSettingsManager
             new InteriorPortalSettings.InteriorDefaultValues(),
             new PortalSettings.DefaultValues(
                 pivotPositionOffset: new Vector3(-0.09f, 0f, 0f),
-                screenCrop: new Padding(left: 0f, right: 0f, top: 0.02f, bottom: 0f),
+                screenCrop: new Padding(left: 0f, right: 0f, top: 0.04f, bottom: 0f),
                 viewDistance: 30f
             )
         ));

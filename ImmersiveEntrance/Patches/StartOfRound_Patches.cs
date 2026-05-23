@@ -1,8 +1,6 @@
 ﻿using com.github.zehsteam.ImmersiveEntrance.Helpers;
 using com.github.zehsteam.ImmersiveEntrance.Managers;
-using com.github.zehsteam.ImmersiveEntrance.MonoBehaviours;
 using HarmonyLib;
-using UnityEngine;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Patches;
 

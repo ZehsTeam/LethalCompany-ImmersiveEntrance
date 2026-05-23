@@ -27,6 +27,9 @@ internal static class InteriorHelper
 
     public static string GetInteriorName(DungeonFlow dungeonFlow)
     {
+        if (dungeonFlow == null)
+            return "DungeonFlow is null";
+
         InteriorType interiorType = GetInteriorType(dungeonFlow);
 
         if (interiorType == InteriorType.Unknown)
@@ -66,6 +69,16 @@ internal static class InteriorHelper
 
     public static DungeonFlow GetCurrentDungeonFlow()
     {
-        return RoundManager.Instance.dungeonFlowTypes[RoundManager.Instance.currentDungeonType].dungeonFlow;
+        if (RoundManager.Instance == null)
+            return null;
+
+        int index = RoundManager.Instance.currentDungeonType;
+
+        IndoorMapType[] array = RoundManager.Instance.dungeonFlowTypes;
+
+        if (index < 0 || index > array.Length - 1)
+            return null;
+
+        return array[index].dungeonFlow;
     }
 }

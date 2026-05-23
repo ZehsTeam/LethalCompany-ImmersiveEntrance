@@ -82,6 +82,34 @@ public class DoorPortal : MonoBehaviour
         {
             CullFactoryProxy.DisableCullingForCamera(_portalCamera);
         }
+
+        if (MainEntrance == null)
+        {
+            Logger.LogError($"[{nameof(DoorPortal)}] {nameof(Start)}: MainEntranceData is null!");
+            return;
+        }
+
+        if (MainEntrance.IsOutside)
+        {
+            PortalSettings = PortalSettingsManager.MoonDatabase.GetEntryForCurrentMoon();
+        }
+        else
+        {
+            PortalSettings = PortalSettingsManager.InteriorDatabase.GetEntryForCurrentInterior();
+        }
+
+        if (PortalSettings == null)
+        {
+            Logger.LogError($"[{nameof(DoorPortal)}] {nameof(Start)}: PortalSettings is null!");
+            return;
+        }
+
+        Utils.InvokeAfterDelay(InitializePivot, TimeSpan.FromSeconds(0.1f), this);
+
+        InitializeScreen();
+        InitializeCamera();
+
+        ApplyConfigSettings();
     }
 
     private void Update()
@@ -103,34 +131,6 @@ public class DoorPortal : MonoBehaviour
     public void SetMainEntranceData(MainEntranceData mainEntrance)
     {
         MainEntrance = mainEntrance;
-
-        if (mainEntrance == null)
-        {
-            Logger.LogError($"[{nameof(DoorPortal)}] {nameof(SetMainEntranceData)}: MainEntranceData is null!");
-            return;
-        }
-
-        if (mainEntrance.IsOutside)
-        {
-            PortalSettings = PortalSettingsManager.MoonDatabase.GetEntryForCurrentMoon();
-        }
-        else
-        {
-            PortalSettings = PortalSettingsManager.InteriorDatabase.GetEntryForCurrentInterior();
-        }
-
-        if (PortalSettings == null)
-        {
-            Logger.LogError($"[{nameof(DoorPortal)}] {nameof(SetMainEntranceData)}: PortalSettings is null!");
-            return;
-        }
-
-        Utils.InvokeAfterDelay(InitializePivot, TimeSpan.FromSeconds(0.1f));
-
-        InitializeScreen();
-        InitializeCamera();
-
-        ApplyConfigSettings();
     }
 
     public void LinkPortal(DoorPortal other)

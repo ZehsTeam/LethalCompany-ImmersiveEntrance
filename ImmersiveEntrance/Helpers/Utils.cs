@@ -53,7 +53,7 @@ internal static class Utils
         return Random.value * 100f <= percent;
     }
 
-    public static void InvokeNextFrame(Action action)
+    public static Coroutine InvokeNextFrame(Action action, MonoBehaviour monoBehaviour = null)
     {
         IEnumerator Coroutine()
         {
@@ -61,10 +61,15 @@ internal static class Utils
             action?.Invoke();
         }
 
-        CoroutineRunner.Start(Coroutine());
+        if (monoBehaviour != null)
+        {
+            return monoBehaviour.StartCoroutine(Coroutine());
+        }
+
+        return CoroutineRunner.Start(Coroutine());
     }
 
-    public static void InvokeAfterDelay(Action action, TimeSpan timeSpan)
+    public static Coroutine InvokeAfterDelay(Action action, TimeSpan timeSpan, MonoBehaviour monoBehaviour = null)
     {
         IEnumerator Coroutine()
         {
@@ -72,6 +77,11 @@ internal static class Utils
             action?.Invoke();
         }
 
-        CoroutineRunner.Start(Coroutine());
+        if (monoBehaviour != null)
+        {
+            return monoBehaviour.StartCoroutine(Coroutine());
+        }
+
+        return CoroutineRunner.Start(Coroutine());
     }
 }
