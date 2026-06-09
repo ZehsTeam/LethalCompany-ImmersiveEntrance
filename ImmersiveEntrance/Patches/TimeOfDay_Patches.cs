@@ -7,6 +7,7 @@ using HarmonyLib;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace com.github.zehsteam.ImmersiveEntrance.Patches;
 
@@ -24,8 +25,15 @@ internal static class TimeOfDay_Patches
     [HarmonyPostfix]
     private static void SetInsideLightingDimness_Patch(TimeOfDay __instance)
     {
+        HDAdditionalLightData indirectLightData = __instance.indirectLightData;
+
+        // Null check here since using the Teleporter in orbit calls the SetInsideLightingDimness method and indirectLightData is null since there is no moon scene 
+        if (indirectLightData == null)
+            return;
+
         float value = PlayerUtils.IsLocalPlayerCameraInsideInterior() ? 0f : 1f;
-        __instance.indirectLightData.lightDimmer = value;
+
+        indirectLightData.lightDimmer = value;
     }
 
     [HarmonyPatch(nameof(TimeOfDay.SetWeatherEffects))]

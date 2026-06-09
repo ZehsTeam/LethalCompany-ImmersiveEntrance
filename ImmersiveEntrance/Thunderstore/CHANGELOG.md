@@ -1,4 +1,8 @@
-# v1.1.2
+# v1.1.3
+
+- Fixed ship teleporters sometimes not working.
+
+## v1.1.2
 
 - Added compatibility with [MaterialAssetRestorerCore](https://thunderstore.io/c/lethal-company/p/Sniper1_1/MaterialAssetRestorerCore/) and [WaterAssetRestorer](https://thunderstore.io/c/lethal-company/p/Sniper1_1/WaterAssetRestorer/) mods.
 - Fixed the portal screen on the Mineshaft interior sticking out at the top a little bit.
